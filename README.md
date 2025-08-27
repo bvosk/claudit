@@ -111,9 +111,9 @@ uv run black .
 
 **Use the convenience script:**
 ```bash
-python format.py --check      # Check formatting
-python format.py --fix        # Format all files
-python format.py --help       # Show help
+uv run format --check      # Check formatting
+uv run format --fix        # Format all files
+uv run format --help       # Show help
 ```
 
 **Pre-commit hooks:**

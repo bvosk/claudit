@@ -97,11 +97,38 @@ class MitmproxyCapture:
             self.logger.error(f"Request failed: {e}")
             raise
 
+    async def wait_for_proxy_ready(
+        self, host: str = "localhost", timeout: float = 10.0
+    ):
+        """Wait until the mitmproxy TCP listener is accepting connections."""
+        loop = asyncio.get_event_loop()
+        start = loop.time()
+        last_err = None
+        while True:
+            try:
+                reader, writer = await asyncio.open_connection(host, self.proxy_port)
+                writer.close()
+                try:
+                    await writer.wait_closed()
+                except Exception:
+                    pass
+                self.logger.info("mitmproxy is ready")
+                return
+            except Exception as e:
+                last_err = e
+                if loop.time() - start > timeout:
+                    self.logger.error(
+                        f"mitmproxy not ready after {timeout}s: {last_err}"
+                    )
+                    raise
+                await asyncio.sleep(0.05)
+
     async def run_capture_session(self):
         """Run a complete capture session"""
         try:
             # Start proxy in background
             proxy_task = asyncio.create_task(self.start_proxy())
+            await self.wait_for_proxy_ready()
 
             # Make the request in a separate thread to avoid blocking
             loop = asyncio.get_event_loop()
@@ -169,7 +196,7 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-async def main():
+async def async_main():
     # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -178,5 +205,9 @@ async def main():
     await capture.run()
 
 
+def main():
+    asyncio.run(async_main())
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

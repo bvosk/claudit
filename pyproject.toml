@@ -11,6 +11,7 @@ test = ["pytest>=7.0", "pytest-asyncio>=0.21", "aiohttp>=3.8"]
 
 [project.scripts]
 mitm-capture = "capture_main:main"
+format = "format:main"
 
 [build-system]
 requires = ["hatchling"]

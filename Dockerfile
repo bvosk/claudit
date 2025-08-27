@@ -44,5 +44,5 @@ RUN mkdir -p /root/.mitmproxy
 
 EXPOSE 8080
 
-# Run via module entrypoint (defined in capture_main.py)
-ENTRYPOINT ["python3", "-m", "capture_main"]
+# Run via console script entrypoint (defined in pyproject.toml [project.scripts])
+ENTRYPOINT ["mitm-capture"]
