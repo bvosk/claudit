@@ -29,6 +29,12 @@ class CaptureAddon:
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
+        if not flow.response:
+            self.logger.warning(
+                f"Response method called for flow with no response: {flow.request.pretty_url}"
+            )
+            return
+
         try:
             # Extract request information
             request_info = {
@@ -88,7 +94,7 @@ class CaptureAddon:
         self._write_capture_data(error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
 
-    def _safe_decode_content(self, content: bytes) -> str:
+    def _safe_decode_content(self, content: bytes | None) -> str:
         """Safely decode content with fallback handling"""
         if not content:
             return ""
