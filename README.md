@@ -1,6 +1,6 @@
 # Mitmproxy HTTP Capture Setup
 
-This setup uses a slim Alpine Docker container to capture HTTP requests using mitmproxy.
+This setup uses a pure Python implementation with mitmproxy to capture HTTP requests in a Docker container.
 
 ## Quick Start
 
@@ -19,8 +19,9 @@ This setup uses a slim Alpine Docker container to capture HTTP requests using mi
 Edit the `.env` file to customize:
 
 - `TARGET_URL` - The URL to send requests to (default: https://httpbin.org/get)
-- `CURL_HEADERS` - Additional headers for curl (comma-separated)
+- `CURL_HEADERS` - Additional headers (comma-separated, format: "key: value")
 - `PROXY_PORT` - Proxy port (default: 8080)
+- `CAPTURE_FILE` - Output file path (default: /app/captures/requests.txt)
 - `KEEP_RUNNING` - Set to `true` to keep container running for inspection
 
 ## Examples
@@ -43,11 +44,26 @@ Then connect to the running container:
 docker exec -it mitmproxy-capture /bin/bash
 ```
 
-## Output
+## Output Format
 
-- Captured requests are saved to `./captures/requests.txt`
-- Contains both request and response data in JSON format
-- Includes headers, content, timestamps, and status codes
+- Captured requests are saved as JSON Lines format to `./captures/requests.txt`
+- Each line contains a complete request/response record with:
+  - Request: method, URL, headers, content, timestamp
+  - Response: status code, headers, content, timestamp
+  - Metadata: request ID, duration in milliseconds
+
+## Architecture
+
+- **Pure Python Implementation**: No bash scripts, cleaner error handling
+- **Programmatic mitmproxy**: Uses mitmproxy's Python API directly
+- **Structured Logging**: Proper Python logging with timestamps
+- **JSON Lines Output**: Easy to parse and process
+
+## Development
+
+To extend the capture functionality, modify:
+- `capture_main.py` - Main application logic
+- `capture_addon.py` - mitmproxy addon for traffic interception
 
 ## Cleanup
 
