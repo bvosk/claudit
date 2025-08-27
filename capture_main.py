@@ -105,15 +105,9 @@ class MitmproxyCapture:
             # Start proxy in background
             proxy_task = asyncio.create_task(self.start_proxy())
 
-            # Wait a moment for proxy to start
-            await asyncio.sleep(2)
-
             # Make the request in a separate thread to avoid blocking
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, self.make_request)
-
-            # Wait a moment for traffic to be processed
-            await asyncio.sleep(1)
 
             self.logger.info("Capture session completed")
 
