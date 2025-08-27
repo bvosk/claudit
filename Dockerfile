@@ -12,6 +12,7 @@ RUN mkdir -p /root/.mitmproxy
 RUN mitmdump --version > /dev/null 2>&1 || echo "mitmproxy installed"
 
 COPY capture.sh /usr/local/bin/capture.sh
+COPY capture_script.py /usr/local/bin/capture_script.py
 RUN chmod +x /usr/local/bin/capture.sh
 
 WORKDIR /app
