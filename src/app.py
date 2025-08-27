@@ -8,11 +8,11 @@ import asyncio
 from pathlib import Path
 from typing import Optional
 
-import requests
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
 
 from capture_addon import CaptureAddon
+from http_client import HttpClient
 
 
 class MitmproxyCapture:
@@ -21,6 +21,7 @@ class MitmproxyCapture:
         self.load_config()
         self.master: Optional[DumpMaster] = None
         self.capture_addon = CaptureAddon(self.capture_file)
+        self.http_client = HttpClient(self.proxy_port)
 
     def setup_logging(self):
         logging.basicConfig(
@@ -68,34 +69,9 @@ class MitmproxyCapture:
 
     def make_request(self):
         """Make HTTP request through the proxy"""
-        self.logger.info(f"Making request to {self.target_url}")
-
-        proxies = {
-            "http": f"http://localhost:{self.proxy_port}",
-            "https": f"http://localhost:{self.proxy_port}",
-        }
-
-        headers = {}
-        if self.curl_headers:
-            for header in self.curl_headers.split(","):
-                if ":" in header:
-                    key, value = header.split(":", 1)
-                    headers[key.strip()] = value.strip()
-
-        try:
-            response = requests.get(
-                self.target_url,
-                proxies=proxies,
-                headers=headers,
-                verify=False,  # Disable SSL verification for mitmproxy
-                timeout=30,
-            )
-            self.logger.info(f"Request completed with status: {response.status_code}")
-            return response
-
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Request failed: {e}")
-            raise
+        return self.http_client.make_request(
+            target_url=self.target_url, headers_string=self.curl_headers
+        )
 
     async def wait_for_proxy_ready(
         self, host: str = "localhost", timeout: float = 10.0
