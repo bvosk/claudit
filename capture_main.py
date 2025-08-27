@@ -39,7 +39,7 @@ class MitmproxyCapture:
         # Ensure capture directory exists
         Path(self.capture_file).parent.mkdir(parents=True, exist_ok=True)
 
-        self.logger.info(f"Configuration loaded:")
+        self.logger.info("Configuration loaded:")
         self.logger.info(f"  Target URL: {self.target_url}")
         self.logger.info(f"  Capture file: {self.capture_file}")
         self.logger.info(f"  Proxy port: {self.proxy_port}")
@@ -57,6 +57,10 @@ class MitmproxyCapture:
         """Start the mitmproxy in background"""
         self.logger.info("Starting mitmproxy...")
         try:
+            if not self.master:
+                raise RuntimeError(
+                    "mitmproxy not configured; call setup_mitmproxy() first"
+                )
             await self.master.run()
         except Exception as e:
             self.logger.error(f"Error running mitmproxy: {e}")
@@ -86,10 +90,7 @@ class MitmproxyCapture:
                 verify=False,  # Disable SSL verification for mitmproxy
                 timeout=30,
             )
-            self.logger.info(
-                f"Request completed with status: {
-                             response.status_code}"
-            )
+            self.logger.info(f"Request completed with status: {response.status_code}")
             return response
 
         except requests.exceptions.RequestException as e:
@@ -109,7 +110,8 @@ class MitmproxyCapture:
             self.logger.info("Capture session completed")
 
             # Stop the proxy
-            self.master.shutdown()
+            if self.master:
+                self.master.shutdown()
 
             # Wait for proxy to finish
             try:
