@@ -65,6 +65,36 @@ To extend the capture functionality, modify:
 - `capture_main.py` - Main application logic
 - `capture_addon.py` - mitmproxy addon for traffic interception
 
+### Testing
+
+This project uses [uv](https://docs.astral.sh/uv/) for package management and testing:
+
+**Run all tests:**
+```bash
+uv run pytest
+```
+
+**Run with verbose output:**
+```bash
+uv run pytest -v
+```
+
+**Run specific test:**
+```bash
+uv run pytest test_e2e_capture.py::TestMitmproxyCapture::test_end_to_end_capture -v
+```
+
+**Install development dependencies:**
+```bash
+uv sync
+```
+
+The test suite includes:
+- End-to-end capture workflow testing
+- Custom headers validation
+- Configuration loading verification
+- Mock HTTP server integration for isolated testing
+
 ## Cleanup
 
 ```bash
