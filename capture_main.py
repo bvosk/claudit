@@ -25,18 +25,16 @@ class MitmproxyCapture:
     def setup_logging(self):
         logging.basicConfig(
             level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
         self.logger = logging.getLogger(__name__)
 
     def load_config(self):
-        self.target_url = os.getenv('TARGET_URL', 'https://httpbin.org/get')
-        self.capture_file = os.getenv(
-            'CAPTURE_FILE', '/app/captures/requests.txt')
-        self.proxy_port = int(os.getenv('PROXY_PORT', '8080'))
-        self.curl_headers = os.getenv('CURL_HEADERS', '')
-        self.keep_running = os.getenv(
-            'KEEP_RUNNING', 'false').lower() == 'true'
+        self.target_url = os.getenv("TARGET_URL", "https://httpbin.org/get")
+        self.capture_file = os.getenv("CAPTURE_FILE", "/app/captures/requests.txt")
+        self.proxy_port = int(os.getenv("PROXY_PORT", "8080"))
+        self.curl_headers = os.getenv("CURL_HEADERS", "")
+        self.keep_running = os.getenv("KEEP_RUNNING", "false").lower() == "true"
 
         # Ensure capture directory exists
         Path(self.capture_file).parent.mkdir(parents=True, exist_ok=True)
@@ -48,10 +46,7 @@ class MitmproxyCapture:
 
     def setup_mitmproxy(self):
         """Configure and create mitmproxy instance"""
-        opts = options.Options(
-            listen_port=self.proxy_port,
-            confdir='/root/.mitmproxy'
-        )
+        opts = options.Options(listen_port=self.proxy_port, confdir="/root/.mitmproxy")
 
         self.master = DumpMaster(opts)
         self.master.addons.add(self.capture_addon)
@@ -72,15 +67,15 @@ class MitmproxyCapture:
         self.logger.info(f"Making request to {self.target_url}")
 
         proxies = {
-            'http': f'http://localhost:{self.proxy_port}',
-            'https': f'http://localhost:{self.proxy_port}'
+            "http": f"http://localhost:{self.proxy_port}",
+            "https": f"http://localhost:{self.proxy_port}",
         }
 
         headers = {}
         if self.curl_headers:
-            for header in self.curl_headers.split(','):
-                if ':' in header:
-                    key, value = header.split(':', 1)
+            for header in self.curl_headers.split(","):
+                if ":" in header:
+                    key, value = header.split(":", 1)
                     headers[key.strip()] = value.strip()
 
         try:
@@ -89,10 +84,12 @@ class MitmproxyCapture:
                 proxies=proxies,
                 headers=headers,
                 verify=False,  # Disable SSL verification for mitmproxy
-                timeout=30
+                timeout=30,
             )
-            self.logger.info(f"Request completed with status: {
-                             response.status_code}")
+            self.logger.info(
+                f"Request completed with status: {
+                             response.status_code}"
+            )
             return response
 
         except requests.exceptions.RequestException as e:
@@ -128,7 +125,7 @@ class MitmproxyCapture:
         """Display captured results"""
         self.logger.info("=== Capture Results ===")
         try:
-            with open(self.capture_file, 'r') as f:
+            with open(self.capture_file, "r") as f:
                 content = f.read()
                 if content.strip():
                     print(content)

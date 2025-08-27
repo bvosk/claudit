@@ -95,6 +95,39 @@ The test suite includes:
 - Configuration loading verification
 - Mock HTTP server integration for isolated testing
 
+### Code Formatting
+
+This project uses [Black](https://black.readthedocs.io/) for consistent Python code formatting:
+
+**Check if files need formatting:**
+```bash
+uv run black --check .
+```
+
+**Format all Python files:**
+```bash
+uv run black .
+```
+
+**Use the convenience script:**
+```bash
+python format.py --check      # Check formatting
+python format.py --fix        # Format all files
+python format.py --help       # Show help
+```
+
+**Pre-commit hooks:**
+The project includes pre-commit hooks that automatically run Black on commits:
+```bash
+uv run pre-commit install      # Install hooks
+uv run pre-commit run --all-files  # Run all hooks manually
+```
+
+Black is configured in `pyproject.toml` with:
+- Line length: 88 characters
+- Target Python version: 3.8+
+- Excludes common directories (`.git`, `__pycache__`, etc.)
+
 ## Cleanup
 
 ```bash

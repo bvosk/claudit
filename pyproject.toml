@@ -20,7 +20,14 @@ build-backend = "hatchling.build"
 packages = ["."]
 
 [tool.uv]
-dev-dependencies = ["pytest>=7.0", "pytest-asyncio>=0.21", "aiohttp>=3.8"]
+dev-dependencies = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "aiohttp>=3.8",
+    "black",
+    "pre-commit",
+]
+
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -28,3 +35,18 @@ testpaths = ["tests", "."]
 python_files = "test_*.py"
 python_functions = "test_*"
 addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+(
+  __pycache__
+  | \.git
+  | \.pytest_cache
+  | \.venv
+  | build
+  | dist
+)
+'''
