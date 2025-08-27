@@ -2,21 +2,12 @@
 name = "mitm-capture"
 version = "0.1.0"
 description = "HTTP traffic capture tool using mitmproxy"
-authors = [
-    {name = "Brian", email = "brian@example.com"}
-]
-dependencies = [
-    "mitmproxy",
-    "requests",
-]
+
+dependencies = ["mitmproxy", "requests"]
 requires-python = ">=3.8"
 
 [project.optional-dependencies]
-test = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21",
-    "aiohttp>=3.8",
-]
+test = ["pytest>=7.0", "pytest-asyncio>=0.21", "aiohttp>=3.8"]
 
 [project.scripts]
 mitm-capture = "capture_main:main"
@@ -29,11 +20,7 @@ build-backend = "hatchling.build"
 packages = ["."]
 
 [tool.uv]
-dev-dependencies = [
-    "pytest>=7.0",
-    "pytest-asyncio>=0.21",
-    "aiohttp>=3.8",
-]
+dev-dependencies = ["pytest>=7.0", "pytest-asyncio>=0.21", "aiohttp>=3.8"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
