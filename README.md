@@ -109,12 +109,7 @@ uv run black --check .
 uv run black .
 ```
 
-**Use the convenience script:**
-```bash
-python scripts/format.py --check      # Check formatting
-python scripts/format.py --fix        # Format all files
-python scripts/format.py --help       # Show help
-```
+
 
 **Pre-commit hooks:**
 The project includes pre-commit hooks that automatically run Black on commits:
