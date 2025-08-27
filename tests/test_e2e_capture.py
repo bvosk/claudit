@@ -7,7 +7,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 
 
-from capture_main import MitmproxyCapture
+from app import MitmproxyCapture
 
 
 @pytest.fixture

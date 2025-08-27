@@ -16,7 +16,7 @@ def run_command(cmd, capture_output=False):
             shell=True,
             capture_output=capture_output,
             text=True,
-            cwd=Path(__file__).parent,
+            cwd=Path(__file__).resolve().parents[1],
         )
         return result
     except subprocess.SubprocessError as e:
@@ -34,7 +34,7 @@ def check_formatting():
         return True
     else:
         print(
-            "❌ Some files need formatting. Run 'python format.py --fix' to fix them."
+            "❌ Some files need formatting. Run 'python scripts/format.py --fix' to fix them."
         )
         return False
 
@@ -58,7 +58,7 @@ def show_help():
 Black Formatter Utility
 
 Usage:
-    python format.py [--check|--fix|--help]
+    python scripts/format.py [--check|--fix|--help]
 
 Options:
     --check     Check if files need formatting (default)
@@ -66,9 +66,9 @@ Options:
     --help      Show this help message
 
 Examples:
-    python format.py              # Check formatting
-    python format.py --check      # Check formatting
-    python format.py --fix        # Format all files
+    python scripts/format.py              # Check formatting
+    python scripts/format.py --check      # Check formatting
+    python scripts/format.py --fix        # Format all files
     """
     print(help_text.strip())
 

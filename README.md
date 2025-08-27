@@ -62,8 +62,8 @@ docker exec -it mitmproxy-capture /bin/bash
 ## Development
 
 To extend the capture functionality, modify:
-- `capture_main.py` - Main application logic
-- `capture_addon.py` - mitmproxy addon for traffic interception
+- `src/app.py` - Main application logic
+- `src/capture_addon.py` - mitmproxy addon for traffic interception
 
 ### Testing
 
@@ -81,7 +81,7 @@ uv run pytest -v
 
 **Run specific test:**
 ```bash
-uv run pytest test_e2e_capture.py::TestMitmproxyCapture::test_end_to_end_capture -v
+uv run pytest tests/test_e2e_capture.py::TestMitmproxyCapture::test_end_to_end_capture -v
 ```
 
 **Install development dependencies:**
@@ -111,9 +111,9 @@ uv run black .
 
 **Use the convenience script:**
 ```bash
-uv run format --check      # Check formatting
-uv run format --fix        # Format all files
-uv run format --help       # Show help
+python scripts/format.py --check      # Check formatting
+python scripts/format.py --fix        # Format all files
+python scripts/format.py --help       # Show help
 ```
 
 **Pre-commit hooks:**
