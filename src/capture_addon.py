@@ -1,24 +1,14 @@
 from mitmproxy import http
-import json
 import logging
 from datetime import datetime
-from pathlib import Path
 
 
 class CaptureAddon:
-    def __init__(self, output_file: str):
-        self.output_file = Path(output_file)
+    def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.request_count = 0
-
-        # Ensure output directory exists
-        self.output_file.parent.mkdir(parents=True, exist_ok=True)
-
-        # Clear previous capture data
-        with open(self.output_file, "w") as f:
-            f.write("")
-
-        self.logger.info(f"CaptureAddon initialized, writing to: {self.output_file}")
+        self.captured_data = []
+        self.logger.info("CaptureAddon initialized in memory mode")
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Called when a request is received"""
@@ -68,8 +58,8 @@ class CaptureAddon:
                 ),
             }
 
-            # Write to file as JSON lines format
-            self._write_capture_data(capture_data)
+            # Store data in memory
+            self.captured_data.append(capture_data)
 
             self.logger.info(
                 f"Captured response: {flow.response.status_code} for {flow.request.pretty_url}"
@@ -91,7 +81,7 @@ class CaptureAddon:
             "error_message": str(flow.error) if flow.error else "Unknown error",
         }
 
-        self._write_capture_data(error_data)
+        self.captured_data.append(error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
 
     def _safe_decode_content(self, content: bytes | None) -> str:
@@ -106,18 +96,3 @@ class CaptureAddon:
                 return content.decode("latin1")
             except UnicodeDecodeError:
                 return f"<binary data: {len(content)} bytes>"
-
-    def _write_capture_data(self, data: dict) -> None:
-        """Write capture data to output file"""
-        try:
-            with open(self.output_file, "a") as f:
-                f.write(json.dumps(data) + "\n")
-        except Exception as e:
-            self.logger.error(f"Failed to write capture data: {e}")
-
-
-# For backwards compatibility when used as standalone addon
-def response(flow: http.HTTPFlow) -> None:
-    """Standalone function for direct mitmproxy usage"""
-    addon = CaptureAddon("/tmp/capture.jsonl")
-    addon.response(flow)

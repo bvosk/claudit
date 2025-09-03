@@ -3,13 +3,7 @@ services:
     build: .
     container_name: mitmproxy-capture
     environment:
-      - TARGET_URL=${TARGET_URL:-https://httpbin.org/get}
-      - CAPTURE_FILE=${CAPTURE_FILE:-/app/captures/requests.txt}
       - PROXY_PORT=${PROXY_PORT:-8080}
-      - CURL_HEADERS=${CURL_HEADERS:-}
-      - KEEP_RUNNING=${KEEP_RUNNING:-false}
-    volumes:
-      - ./captures:/app/captures
     ports:
       - "${PROXY_PORT:-8080}:${PROXY_PORT:-8080}"
     env_file:

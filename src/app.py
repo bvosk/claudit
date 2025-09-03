@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 import signal
 import logging
 import asyncio
-from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
@@ -20,7 +18,7 @@ class MitmproxyCapture:
         self.setup_logging()
         self.load_config()
         self.master: Optional[DumpMaster] = None
-        self.capture_addon = CaptureAddon(self.capture_file)
+        self.capture_addon = CaptureAddon()
         self.http_client = HttpClient(self.proxy_port)
 
     def setup_logging(self):
@@ -31,18 +29,12 @@ class MitmproxyCapture:
         self.logger = logging.getLogger(__name__)
 
     def load_config(self):
-        self.target_url = os.getenv("TARGET_URL", "https://httpbin.org/get")
-        self.capture_file = os.getenv("CAPTURE_FILE", "/app/captures/requests.txt")
-        self.proxy_port = int(os.getenv("PROXY_PORT", "8080"))
-        self.curl_headers = os.getenv("CURL_HEADERS", "")
-        self.keep_running = os.getenv("KEEP_RUNNING", "false").lower() == "true"
-
-        # Ensure capture directory exists
-        Path(self.capture_file).parent.mkdir(parents=True, exist_ok=True)
+        self.target_url = "https://httpbin.org/get"
+        self.proxy_port = 8080
+        self.curl_headers = ""
 
         self.logger.info("Configuration loaded:")
         self.logger.info(f"  Target URL: {self.target_url}")
-        self.logger.info(f"  Capture file: {self.capture_file}")
         self.logger.info(f"  Proxy port: {self.proxy_port}")
 
     def setup_mitmproxy(self):
@@ -99,9 +91,12 @@ class MitmproxyCapture:
                     raise
                 await asyncio.sleep(0.05)
 
-    async def run_capture_session(self):
-        """Run a complete capture session"""
+    async def capture_and_return(self) -> List[Dict]:
+        """Run a complete capture session and return captured data as list of dictionaries"""
         try:
+            # Clear any previous captured data
+            self.capture_addon.captured_data = []
+
             # Start proxy in background
             proxy_task = asyncio.create_task(self.start_proxy())
             await self.wait_for_proxy_ready()
@@ -122,48 +117,12 @@ class MitmproxyCapture:
             except asyncio.TimeoutError:
                 self.logger.warning("Proxy shutdown timeout")
 
+            # Return captured data
+            return self.capture_addon.captured_data.copy()
+
         except Exception as e:
             self.logger.error(f"Capture session failed: {e}")
             raise
-
-    def show_results(self):
-        """Display captured results"""
-        self.logger.info("=== Capture Results ===")
-        try:
-            with open(self.capture_file, "r") as f:
-                content = f.read()
-                if content.strip():
-                    print(content)
-                else:
-                    self.logger.warning("No data captured")
-        except FileNotFoundError:
-            self.logger.error(f"Capture file not found: {self.capture_file}")
-        except Exception as e:
-            self.logger.error(f"Error reading capture file: {e}")
-
-    async def run(self):
-        """Main execution method"""
-        self.logger.info("Starting mitmproxy HTTP capture")
-
-        try:
-            self.setup_mitmproxy()
-            await self.run_capture_session()
-            self.show_results()
-
-            if self.keep_running:
-                self.logger.info("Keeping container running for inspection...")
-                # Keep the container alive
-                while True:
-                    await asyncio.sleep(60)
-
-        except KeyboardInterrupt:
-            self.logger.info("Received interrupt signal")
-        except Exception as e:
-            self.logger.error(f"Capture failed: {e}")
-            sys.exit(1)
-        finally:
-            if self.master:
-                self.master.shutdown()
 
 
 def signal_handler(signum, frame):
@@ -172,13 +131,41 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
+async def capture_http_traffic(target_url=None, proxy_port=8080, headers=""):
+    """One-liner function to capture HTTP traffic and return structured data.
+
+    Args:
+        target_url: URL to capture (default: https://httpbin.org/get)
+        proxy_port: Proxy port to use (default: 8080)
+        headers: Headers to include in request (default: "")
+
+    Returns:
+        List of captured HTTP request/response dictionaries
+    """
+    capture = MitmproxyCapture()
+    if target_url:
+        capture.target_url = target_url
+    if proxy_port != 8080:
+        capture.proxy_port = proxy_port
+        capture.http_client = HttpClient(proxy_port)
+    if headers:
+        capture.curl_headers = headers
+
+    capture.setup_mitmproxy()
+    return await capture.capture_and_return()
+
+
 async def async_main():
     # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    capture = MitmproxyCapture()
-    await capture.run()
+    # Example usage of the one-liner function
+    data = await capture_http_traffic()
+
+    # Print captured data
+    for item in data:
+        print(item)
 
 
 def main():

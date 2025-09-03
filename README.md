@@ -9,48 +9,11 @@ This setup uses a pure Python implementation with mitmproxy to capture HTTP requ
    docker-compose up --build
    ```
 
-2. **View captured requests:**
-   ```bash
-   cat captures/requests.txt
-   ```
-
 ## Configuration
 
 Edit the `.env` file to customize:
 
-- `TARGET_URL` - The URL to send requests to (default: https://httpbin.org/get)
-- `CURL_HEADERS` - Additional headers (comma-separated, format: "key: value")
 - `PROXY_PORT` - Proxy port (default: 8080)
-- `CAPTURE_FILE` - Output file path (default: /app/captures/requests.txt)
-- `KEEP_RUNNING` - Set to `true` to keep container running for inspection
-
-## Examples
-
-**Capture requests to a custom API:**
-```bash
-# In .env file:
-TARGET_URL=https://api.example.com/endpoint
-CURL_HEADERS=Authorization: Bearer your-token,Content-Type: application/json
-```
-
-**Keep container running for manual testing:**
-```bash
-# In .env file:
-KEEP_RUNNING=true
-```
-
-Then connect to the running container:
-```bash
-docker exec -it mitmproxy-capture /bin/bash
-```
-
-## Output Format
-
-- Captured requests are saved as JSON Lines format to `./captures/requests.txt`
-- Each line contains a complete request/response record with:
-  - Request: method, URL, headers, content, timestamp
-  - Response: status code, headers, content, timestamp
-  - Metadata: request ID, duration in milliseconds
 
 ## Architecture
 
@@ -58,12 +21,6 @@ docker exec -it mitmproxy-capture /bin/bash
 - **Programmatic mitmproxy**: Uses mitmproxy's Python API directly
 - **Structured Logging**: Proper Python logging with timestamps
 - **JSON Lines Output**: Easy to parse and process
-
-## Development
-
-To extend the capture functionality, modify:
-- `src/app.py` - Main application logic
-- `src/capture_addon.py` - mitmproxy addon for traffic interception
 
 ### Testing
 
@@ -110,7 +67,6 @@ uv run black .
 ```
 
 
-
 **Pre-commit hooks:**
 The project includes pre-commit hooks that automatically run Black on commits:
 ```bash
@@ -127,5 +83,4 @@ Black is configured in `pyproject.toml` with:
 
 ```bash
 docker-compose down
-rm -rf captures/
 ```
