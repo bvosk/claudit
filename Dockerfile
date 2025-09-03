@@ -19,6 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
     && mv /root/.local/bin/uv /usr/local/bin/uv
 
+# Install Claude Code CLI tool
+RUN curl -fsSL https://claude.ai/install.sh | bash \
+    && mv /root/.local/bin/claude /usr/local/bin/claude
+
 # Create a dedicated virtual environment for the app and prefer it on PATH
 ENV VENV_PATH=/opt/venv
 RUN python3 -m venv "${VENV_PATH}"

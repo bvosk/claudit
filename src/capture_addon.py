@@ -10,11 +10,75 @@ class CaptureAddon:
         self.captured_data = []
         self.logger.info("CaptureAddon initialized in memory mode")
 
+    def server_connect(self, conn) -> None:
+        """Called when establishing a server connection"""
+        try:
+            # Try to access connection details safely
+            server_info = (
+                f"{conn.server_conn.address[0]}:{conn.server_conn.address[1]}"
+                if hasattr(conn, "server_conn") and conn.server_conn.address
+                else "unknown"
+            )
+            client_info = (
+                f"{conn.client_conn.address[0]}:{conn.client_conn.address[1]}"
+                if hasattr(conn, "client_conn") and conn.client_conn.address
+                else "unknown"
+            )
+            self.logger.info(
+                f"Attempting to connect to server: {server_info} for client {client_info}"
+            )
+        except Exception as e:
+            self.logger.debug(f"Could not log server connection details: {e}")
+
+    def tls_clienthello(self, data) -> None:
+        """Called when TLS ClientHello is received"""
+        try:
+            # Try to access connection details safely
+            server_info = (
+                f"{data.context.server.address[0]}:{data.context.server.address[1]}"
+                if hasattr(data.context, "server") and data.context.server.address
+                else "unknown"
+            )
+            client_info = (
+                f"{data.context.client.address[0]}:{data.context.client.address[1]}"
+                if hasattr(data.context, "client") and data.context.client.address
+                else "unknown"
+            )
+            self.logger.info(
+                f"TLS handshake initiated for {server_info} with client {client_info}"
+            )
+        except Exception as e:
+            self.logger.debug(f"Could not log TLS connection details: {e}")
+
+    def tls_failed_clienthello(self, data) -> None:
+        """Called when TLS ClientHello fails"""
+        try:
+            # Try to access connection details safely
+            server_info = (
+                f"{data.context.server.address[0]}:{data.context.server.address[1]}"
+                if hasattr(data.context, "server") and data.context.server.address
+                else "unknown"
+            )
+            client_info = (
+                f"{data.context.client.address[0]}:{data.context.client.address[1]}"
+                if hasattr(data.context, "client") and data.context.client.address
+                else "unknown"
+            )
+            self.logger.error(
+                f"TLS handshake failed for {server_info} with client {client_info}"
+            )
+        except Exception as e:
+            self.logger.debug(f"Could not log TLS failure details: {e}")
+
     def request(self, flow: http.HTTPFlow) -> None:
         """Called when a request is received"""
         self.request_count += 1
         self.logger.info(
             f"Intercepted request #{self.request_count}: {flow.request.method} {flow.request.pretty_url}"
+        )
+        self.logger.debug(
+            f"Request headers: {dict(flow.request.headers)}\n"
+            f"Request content length: {len(flow.request.content) if flow.request.content else 0} bytes"
         )
 
     def response(self, flow: http.HTTPFlow) -> None:
@@ -63,6 +127,10 @@ class CaptureAddon:
 
             self.logger.info(
                 f"Captured response: {flow.response.status_code} for {flow.request.pretty_url}"
+            )
+            self.logger.debug(
+                f"Response headers: {dict(flow.response.headers)}\n"
+                f"Response content length: {len(flow.response.content) if flow.response.content else 0} bytes"
             )
 
         except Exception as e:

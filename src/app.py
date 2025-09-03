@@ -4,41 +4,46 @@ import sys
 import signal
 import logging
 import asyncio
+import socket
 from typing import Optional, List, Dict
 
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
 
 from capture_addon import CaptureAddon
-from http_client import HttpClient
+from claude_client import ClaudeClient
 
 
 class MitmproxyCapture:
-    def __init__(self):
+    def __init__(self, proxy_port=8080):
         self.setup_logging()
-        self.load_config()
+        self.proxy_port = proxy_port
         self.master: Optional[DumpMaster] = None
         self.capture_addon = CaptureAddon()
-        self.http_client = HttpClient(self.proxy_port)
+        self.claude_client = ClaudeClient(self.proxy_port)
 
     def setup_logging(self):
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.DEBUG,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
         self.logger = logging.getLogger(__name__)
 
-    def load_config(self):
-        self.target_url = "https://httpbin.org/get"
-        self.proxy_port = 8080
-        self.curl_headers = ""
-
-        self.logger.info("Configuration loaded:")
-        self.logger.info(f"  Target URL: {self.target_url}")
-        self.logger.info(f"  Proxy port: {self.proxy_port}")
+    def is_port_available(self, port: int, host: str = "localhost") -> bool:
+        """Check if a port is available for binding"""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.bind((host, port))
+                return True
+        except OSError:
+            return False
 
     def setup_mitmproxy(self):
-        """Configure and create mitmproxy instance"""
+        """Configure and create mitmproxy instance with basic settings"""
+        if not self.is_port_available(self.proxy_port):
+            raise RuntimeError(f"Port {self.proxy_port} is already in use")
+
         opts = options.Options(listen_port=self.proxy_port, confdir="/root/.mitmproxy")
 
         self.master = DumpMaster(opts)
@@ -59,11 +64,9 @@ class MitmproxyCapture:
             self.logger.error(f"Error running mitmproxy: {e}")
             raise
 
-    def make_request(self):
-        """Make HTTP request through the proxy"""
-        return self.http_client.make_request(
-            target_url=self.target_url, headers_string=self.curl_headers
-        )
+    def run_claude(self):
+        """Run Claude command through the proxy"""
+        return self.claude_client.run_claude_command()
 
     async def wait_for_proxy_ready(
         self, host: str = "localhost", timeout: float = 10.0
@@ -101,27 +104,46 @@ class MitmproxyCapture:
             proxy_task = asyncio.create_task(self.start_proxy())
             await self.wait_for_proxy_ready()
 
-            # Make the request in a separate thread to avoid blocking
+            # Run Claude command in a separate thread to avoid blocking
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, self.make_request)
+            await loop.run_in_executor(None, self.run_claude)
 
             self.logger.info("Capture session completed")
+
+            # Return captured data before cleanup
+            captured_data = self.capture_addon.captured_data.copy()
 
             # Stop the proxy
             if self.master:
                 self.master.shutdown()
 
-            # Wait for proxy to finish
+            # Wait for proxy to finish with longer timeout and force cancellation if needed
             try:
                 await asyncio.wait_for(proxy_task, timeout=5)
             except asyncio.TimeoutError:
-                self.logger.warning("Proxy shutdown timeout")
+                self.logger.warning("Proxy shutdown timeout, forcing task cancellation")
+                proxy_task.cancel()
+                try:
+                    await proxy_task
+                except asyncio.CancelledError:
+                    pass
+                if self.master:
+                    self.master = None
 
-            # Return captured data
-            return self.capture_addon.captured_data.copy()
+            # Ensure port is released - wait for system to fully close the socket
+            await asyncio.sleep(0.5)
+
+            return captured_data
 
         except Exception as e:
             self.logger.error(f"Capture session failed: {e}")
+            # Ensure cleanup on error
+            if self.master:
+                try:
+                    self.master.shutdown()
+                    await asyncio.sleep(1)
+                except Exception:
+                    pass
             raise
 
 
@@ -131,28 +153,21 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-async def capture_http_traffic(target_url=None, proxy_port=8080, headers=""):
-    """One-liner function to capture HTTP traffic and return structured data.
+async def capture_claude_traffic():
+    """Capture Claude's HTTP traffic using the working http_only configuration"""
+    logger = logging.getLogger(__name__)
 
-    Args:
-        target_url: URL to capture (default: https://httpbin.org/get)
-        proxy_port: Proxy port to use (default: 8080)
-        headers: Headers to include in request (default: "")
+    try:
+        logger.info("Starting Claude HTTP traffic capture")
+        capture = MitmproxyCapture()
+        capture.setup_mitmproxy()
+        data = await capture.capture_and_return()
+        logger.info(f"Successfully captured {len(data)} requests")
+        return data
 
-    Returns:
-        List of captured HTTP request/response dictionaries
-    """
-    capture = MitmproxyCapture()
-    if target_url:
-        capture.target_url = target_url
-    if proxy_port != 8080:
-        capture.proxy_port = proxy_port
-        capture.http_client = HttpClient(proxy_port)
-    if headers:
-        capture.curl_headers = headers
-
-    capture.setup_mitmproxy()
-    return await capture.capture_and_return()
+    except Exception as e:
+        logger.error(f"Traffic capture failed: {e}")
+        return []
 
 
 async def async_main():
@@ -160,11 +175,13 @@ async def async_main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Example usage of the one-liner function
-    data = await capture_http_traffic()
+    # Capture Claude HTTP traffic
+    captured_data = await capture_claude_traffic()
 
-    # Print captured data
-    for item in data:
+    # Print results
+    print(f"\n=== Claude HTTP Traffic Capture ===")
+    print(f"Captured {len(captured_data)} requests")
+    for item in captured_data:
         print(item)
 
 
