@@ -295,8 +295,6 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
 }
 ```
 
----
-
 
 ## Bash
 
@@ -447,8 +445,6 @@ Important:
 }
 ```
 
----
-
 
 ## Glob
 
@@ -484,8 +480,6 @@ Important:
   "type": "object"
 }
 ```
-
----
 
 
 ## Grep
@@ -573,8 +567,6 @@ A powerful search tool built on ripgrep
 }
 ```
 
----
-
 
 ## ExitPlanMode
 
@@ -607,8 +599,6 @@ Eg.
   "type": "object"
 }
 ```
-
----
 
 
 ## Read
@@ -660,8 +650,6 @@ Usage:
 }
 ```
 
----
-
 
 ## Edit
 
@@ -711,8 +699,6 @@ Usage:
   "type": "object"
 }
 ```
-
----
 
 
 ## MultiEdit
@@ -811,8 +797,6 @@ If you want to create a new file, use:
 }
 ```
 
----
-
 
 ## Write
 
@@ -851,8 +835,6 @@ Usage:
   "type": "object"
 }
 ```
-
----
 
 
 ## NotebookEdit
@@ -907,8 +889,6 @@ Completely replaces the contents of a specific cell in a Jupyter notebook (.ipyn
 }
 ```
 
----
-
 
 ## WebFetch
 
@@ -958,8 +938,6 @@ Usage notes:
   "type": "object"
 }
 ```
-
----
 
 
 ## TodoWrite
@@ -1197,8 +1175,6 @@ When in doubt, use this tool. Being proactive with task management demonstrates 
 }
 ```
 
----
-
 
 ## WebSearch
 
@@ -1252,8 +1228,6 @@ Usage notes:
 }
 ```
 
----
-
 
 ## BashOutput
 
@@ -1293,8 +1267,6 @@ Usage notes:
 }
 ```
 
----
-
 
 ## KillBash
 
@@ -1327,7 +1299,5 @@ Usage notes:
   "type": "object"
 }
 ```
-
----
 
 
