@@ -3,7 +3,7 @@ name = "mitm-capture"
 version = "0.1.0"
 description = "HTTP traffic capture tool using mitmproxy"
 requires-python = ">=3.8"
-dependencies = ["mitmproxy", "requests"]
+dependencies = ["mitmproxy", "requests", "jinja2"]
 
 [project.optional-dependencies]
 test = ["pytest>=7.0", "pytest-asyncio>=0.21", "aiohttp>=3.8"]

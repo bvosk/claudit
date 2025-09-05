@@ -1892,6 +1892,7 @@ name = "mitm-capture"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "jinja2" },
     { name = "mitmproxy", version = "8.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "mitmproxy", version = "9.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
     { name = "mitmproxy", version = "11.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10' and python_full_version < '3.12'" },
@@ -1929,6 +1930,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", marker = "extra == 'test'", specifier = ">=3.8" },
+    { name = "jinja2" },
     { name = "mitmproxy" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.21" },
