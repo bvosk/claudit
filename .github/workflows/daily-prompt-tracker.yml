@@ -1,0 +1,94 @@
+name: Daily Claude Code Prompt Tracker
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch: # Allow manual triggering for testing
+
+jobs:
+  track-prompt-changes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history to enable proper diffing
+          fetch-depth: 0
+
+      - name: Set up Docker
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Run docker compose with API key
+        run: |
+          echo "📅 Daily Claude Code Prompt Tracker"
+          echo "🕐 Started at $(date)"
+
+          # Export the API key for docker compose
+          export ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
+
+          # Validate API key is set
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "❌ ANTHROPIC_API_KEY secret is not set"
+            exit 1
+          fi
+
+          echo "🔑 API key configured"
+
+          # Run docker compose to capture the prompt
+          echo "🐳 Running docker compose up..."
+          docker compose up --build
+
+          echo "✅ Capture process completed"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Check for prompt changes
+        id: check_changes
+        run: |
+          echo "🔍 Checking for prompt changes..."
+
+          # Check if the prompt file exists
+          if [ ! -f "prompts/claudecode.md" ]; then
+            echo "❌ prompts/claudecode.md not found"
+            exit 1
+          fi
+
+          # Check if there are any changes to the prompt file
+          if git diff --quiet HEAD -- prompts/; then
+            echo "📝 No prompt changes detected"
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          else
+            echo "📝 Prompt changes detected"
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          echo "💾 Committing changes..."
+
+          # Configure git
+          git config --local user.email "claudit@githubactions.com"
+          git config --local user.name "Claudit"
+
+          # Add the changed file
+          git add prompts/
+
+          # Create commit with timestamp
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+          git commit -m "🤖 Update prompt"
+
+          # Push the changes
+          echo "🚀 Pushing to main branch..."
+          git push origin main
+
+          echo "✅ Changes committed and pushed successfully"
+
+      - name: Log completion
+        if: always()
+        run: |
+          echo "✅ Workflow completed"
+          echo "🕐 Finished at $(date)"

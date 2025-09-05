@@ -27,6 +27,11 @@ class ClaudeClient:
         env["HTTP_PROXY"] = self.proxy_url
         env["HTTPS_PROXY"] = self.proxy_url
 
+        # Ensure ANTHROPIC_API_KEY is available
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if "ANTHROPIC_API_KEY" not in env and api_key:
+            env["ANTHROPIC_API_KEY"] = api_key
+
         try:
             # Construct the command with echo and pipe
             cmd = "claude -p hello"
