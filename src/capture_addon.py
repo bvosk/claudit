@@ -3,7 +3,6 @@ import logging
 import json
 import os
 from datetime import datetime
-from urllib.parse import urlparse
 
 
 class CaptureAddon:
@@ -17,8 +16,7 @@ class CaptureAddon:
         os.makedirs(self.captures_dir, exist_ok=True)
 
         # Create timestamped filename for this session
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.capture_file = os.path.join(self.captures_dir, f"capture_{timestamp}.json")
+        self.capture_file = os.path.join(self.captures_dir, "claudecode.json")
 
         self.logger.info("CaptureAddon initialized in memory mode")
         self.logger.info(f"Capture file: {self.capture_file}")
@@ -181,13 +179,19 @@ class CaptureAddon:
         self._write_capture_to_file(error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
 
-    def _safe_decode_content(self, content: bytes | None) -> str:
-        """Safely decode content with fallback handling"""
+    def _safe_decode_content(self, content: bytes | None) -> dict | str:
+        """Safely decode content with fallback handling, parsing JSON when possible"""
         if not content:
             return ""
 
         try:
-            return content.decode("utf-8")
+            decoded = content.decode("utf-8")
+            # Try to parse as JSON for structured display
+            try:
+                return json.loads(decoded)
+            except json.JSONDecodeError:
+                # Not JSON, return as string
+                return decoded
         except UnicodeDecodeError:
             try:
                 return content.decode("latin1")
@@ -206,6 +210,6 @@ class CaptureAddon:
         """Write captured data to timestamped JSON file"""
         try:
             with open(self.capture_file, "a") as f:
-                f.write(json.dumps(capture_data) + "\n")
+                f.write(json.dumps(capture_data, indent=2) + "\n")
         except Exception as e:
             self.logger.error(f"Error writing capture to file: {e}")
