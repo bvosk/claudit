@@ -27,9 +27,6 @@ class CaptureAddon:
             "x-access-token",
         }
 
-        self.logger.info("CaptureAddon initialized in memory mode")
-        self.logger.info(f"Capture file: {self.capture_file}")
-
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
         # Check if request is to api.anthropic.com
@@ -83,9 +80,6 @@ class CaptureAddon:
             # Write to file
             self._write_capture_to_file(capture_data)
 
-            self.logger.info(
-                f"Captured response: {flow.response.status_code} for {flow.request.pretty_url}"
-            )
             self.logger.debug(
                 f"Response headers: {dict(flow.response.headers)}\n"
                 f"Response content length: {len(flow.response.content) if flow.response.content else 0} bytes"

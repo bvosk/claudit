@@ -17,10 +17,7 @@ class MitmproxyCapture:
         self.claude_client = ClaudeClient(self.proxy_port)
 
     def setup_logging(self):
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
+        # Logging is now configured centrally in app.py
         self.logger = logging.getLogger(__name__)
 
     def is_port_available(self, port: int, host: str = "localhost") -> bool:
@@ -43,11 +40,8 @@ class MitmproxyCapture:
         self.master = DumpMaster(opts)
         self.master.addons.add(self.capture_addon)
 
-        self.logger.info(f"mitmproxy configured on port {self.proxy_port}")
-
     async def start_proxy(self):
         """Start the mitmproxy in background"""
-        self.logger.info("Starting mitmproxy...")
         try:
             if not self.master:
                 raise RuntimeError(
@@ -73,7 +67,6 @@ class MitmproxyCapture:
                     await writer.wait_closed()
                 except Exception:
                     pass
-                self.logger.info("mitmproxy is ready")
                 return
             except Exception as e:
                 last_err = e
@@ -97,8 +90,6 @@ class MitmproxyCapture:
             # Run Claude command in a separate thread to avoid blocking
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(None, self.claude_client.run_claude_command)
-
-            self.logger.info("Capture session completed")
 
             # Return captured data before cleanup
             captured_data = self.capture_addon.captured_data.copy()

@@ -69,8 +69,6 @@ class PromptFormatter:
                     f"Template directory not found in any of: {available_dirs}"
                 )
 
-            self.logger.info(f"Using template directory: {template_dir}")
-
             if not template_dir.exists():
                 raise FileNotFoundError(f"Template directory not found: {template_dir}")
 
@@ -91,7 +89,6 @@ class PromptFormatter:
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(rendered_content)
 
-            self.logger.info(f"Generated markdown file: {output_path}")
             return str(output_path)
 
         except Exception as e:

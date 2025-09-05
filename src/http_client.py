@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 import requests
 
@@ -15,8 +15,6 @@ class HttpClient:
         self, target_url: str, headers_string: str = "", timeout: int = 30
     ) -> requests.Response:
         """Make HTTP request through the proxy"""
-        self.logger.info(f"Making request to {target_url}")
-
         proxies = {
             "http": f"http://localhost:{self.proxy_port}",
             "https": f"http://localhost:{self.proxy_port}",
@@ -32,7 +30,6 @@ class HttpClient:
                 verify=False,
                 timeout=timeout,
             )
-            self.logger.info(f"Request completed with status: {response.status_code}")
             return response
 
         except requests.exceptions.RequestException as e:

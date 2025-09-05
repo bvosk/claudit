@@ -27,16 +27,9 @@ class ClaudeClient:
         env["HTTP_PROXY"] = self.proxy_url
         env["HTTPS_PROXY"] = self.proxy_url
 
-        # Log the environment variables being set
-        self.logger.info("Setting environment variables for HTTP proxy:")
-        self.logger.info(f"  HTTP_PROXY={env.get('HTTP_PROXY', '')}")
-        self.logger.info(f"  HTTPS_PROXY={env.get('HTTPS_PROXY', '')}")
-
         try:
             # Construct the command with echo and pipe
             cmd = "claude -p hello"
-
-            self.logger.info(f"Executing command: {cmd}")
 
             # Run the command in shell
             result = subprocess.run(
@@ -83,11 +76,3 @@ class ClaudeClient:
                 "stderr": str(e),
                 "command": 'echo "hello" | claude -p --output-format json',
             }
-
-
-# Configure logging if not already configured
-if not logging.getLogger().handlers:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
