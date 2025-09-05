@@ -1,6 +1,9 @@
 from mitmproxy import http
 import logging
+import json
+import os
 from datetime import datetime
+from urllib.parse import urlparse
 
 
 class CaptureAddon:
@@ -8,7 +11,17 @@ class CaptureAddon:
         self.logger = logging.getLogger(__name__)
         self.request_count = 0
         self.captured_data = []
+
+        # Create captures directory if it doesn't exist
+        self.captures_dir = "captures"
+        os.makedirs(self.captures_dir, exist_ok=True)
+
+        # Create timestamped filename for this session
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.capture_file = os.path.join(self.captures_dir, f"capture_{timestamp}.json")
+
         self.logger.info("CaptureAddon initialized in memory mode")
+        self.logger.info(f"Capture file: {self.capture_file}")
 
     def server_connect(self, conn) -> None:
         """Called when establishing a server connection"""
@@ -72,6 +85,10 @@ class CaptureAddon:
 
     def request(self, flow: http.HTTPFlow) -> None:
         """Called when a request is received"""
+        # Check if request is to api.anthropic.com
+        if not self._is_anthropic_request(flow):
+            return
+
         self.request_count += 1
         self.logger.info(
             f"Intercepted request #{self.request_count}: {flow.request.method} {flow.request.pretty_url}"
@@ -83,6 +100,10 @@ class CaptureAddon:
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
+        # Check if request is to api.anthropic.com
+        if not self._is_anthropic_request(flow):
+            return
+
         if not flow.response:
             self.logger.warning(
                 f"Response method called for flow with no response: {flow.request.pretty_url}"
@@ -125,6 +146,9 @@ class CaptureAddon:
             # Store data in memory
             self.captured_data.append(capture_data)
 
+            # Write to file
+            self._write_capture_to_file(capture_data)
+
             self.logger.info(
                 f"Captured response: {flow.response.status_code} for {flow.request.pretty_url}"
             )
@@ -138,6 +162,10 @@ class CaptureAddon:
 
     def error(self, flow: http.HTTPFlow) -> None:
         """Called when a flow encounters an error"""
+        # Check if request is to api.anthropic.com
+        if not self._is_anthropic_request(flow):
+            return
+
         error_data = {
             "id": self.request_count,
             "timestamp": datetime.now().isoformat(),
@@ -150,6 +178,7 @@ class CaptureAddon:
         }
 
         self.captured_data.append(error_data)
+        self._write_capture_to_file(error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
 
     def _safe_decode_content(self, content: bytes | None) -> str:
@@ -164,3 +193,19 @@ class CaptureAddon:
                 return content.decode("latin1")
             except UnicodeDecodeError:
                 return f"<binary data: {len(content)} bytes>"
+
+    def _is_anthropic_request(self, flow: http.HTTPFlow) -> bool:
+        """Check if the request is to api.anthropic.com"""
+        try:
+            url = flow.request.url
+            return "api.anthropic.com/v1/messages" in url
+        except:
+            return False
+
+    def _write_capture_to_file(self, capture_data: dict) -> None:
+        """Write captured data to timestamped JSON file"""
+        try:
+            with open(self.capture_file, "a") as f:
+                f.write(json.dumps(capture_data) + "\n")
+        except Exception as e:
+            self.logger.error(f"Error writing capture to file: {e}")
