@@ -11,4 +11,5 @@ services:
       - ./captures:/app/captures
       - ./prompts:/app/prompts
     env_file:
-      - .env
+      - path: .env
+        required: false
