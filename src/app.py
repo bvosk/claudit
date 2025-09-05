@@ -64,10 +64,6 @@ class MitmproxyCapture:
             self.logger.error(f"Error running mitmproxy: {e}")
             raise
 
-    def run_claude(self):
-        """Run Claude command through the proxy"""
-        return self.claude_client.run_claude_command()
-
     async def wait_for_proxy_ready(
         self, host: str = "localhost", timeout: float = 10.0
     ):
@@ -106,7 +102,7 @@ class MitmproxyCapture:
 
             # Run Claude command in a separate thread to avoid blocking
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, self.run_claude)
+            await loop.run_in_executor(None, self.claude_client.run_claude_command)
 
             self.logger.info("Capture session completed")
 
@@ -179,7 +175,7 @@ async def async_main():
     captured_data = await capture_claude_traffic()
 
     # Print results
-    print(f"\n=== Claude HTTP Traffic Capture ===")
+    print("\n=== Claude HTTP Traffic Capture ===")
     print(f"Captured {len(captured_data)} requests")
     for item in captured_data:
         print(item)
