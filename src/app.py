@@ -6,6 +6,7 @@ import logging
 import asyncio
 
 from mitm_capture import MitmproxyCapture
+from prompt_formatter import PromptFormatter
 
 
 def signal_handler(signum, frame):
@@ -39,11 +40,10 @@ async def async_main():
     # Capture Claude HTTP traffic
     captured_data = await capture_claude_traffic()
 
-    # Print results
-    print("\n=== Claude HTTP Traffic Capture ===")
     print(f"Captured {len(captured_data)} requests")
-    for item in captured_data:
-        print(item)
+
+    formatter = PromptFormatter(captured_data[0])
+    formatter.format_to_markdown("claudecode.md")
 
 
 def main():

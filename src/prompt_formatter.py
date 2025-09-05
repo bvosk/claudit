@@ -1,9 +1,7 @@
 import json
-import os
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -27,26 +25,6 @@ class PromptFormatter:
             self.logger.error(f"Failed to parse request content as JSON: {e}")
             raise ValueError(f"Failed to parse request content as JSON: {e}")
 
-    def _format_timestamp(self) -> str:
-        """Format timestamp from JSON data."""
-        timestamp_str = self.json_data.get("timestamp", "")
-        if timestamp_str:
-            try:
-                # Parse ISO timestamp and format it nicely
-                dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-                return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
-            except ValueError:
-                return timestamp_str
-        return "N/A"
-
-    def _get_model(self) -> str:
-        """Extract model name from request content."""
-        return self.request_content.get("model", "Unknown")
-
-    def _get_duration(self) -> Optional[float]:
-        """Calculate duration if available."""
-        return self.json_data.get("duration_ms")
-
     def _get_system_prompts(self) -> list:
         """Extract system prompts from request content."""
         return self.request_content.get("system", [])
@@ -54,14 +32,6 @@ class PromptFormatter:
     def _get_tools(self) -> list:
         """Extract tools from request content."""
         return self.request_content.get("tools", [])
-
-    def _get_messages(self) -> list:
-        """Extract messages from request content."""
-        return self.request_content.get("messages", [])
-
-    def _get_response(self) -> Optional[Dict[str, Any]]:
-        """Extract response data if available."""
-        return self.json_data.get("response")
 
     def format_to_markdown(self, output_filename: str = "claudecode.md") -> str:
         """
@@ -78,25 +48,39 @@ class PromptFormatter:
             prompts_dir = Path("prompts")
             prompts_dir.mkdir(exist_ok=True)
 
-            # Set up Jinja2 environment
-            project_root = Path(__file__).parent.parent
-            template_dir = project_root / "templates"
+            # Set up Jinja2 environment - find templates directory
+            # Try multiple possible locations for templates
+            possible_template_dirs = [
+                Path(__file__).parent.parent
+                / "templates",  # Development: src/../templates
+                Path("/app/templates"),  # Docker: /app/templates
+                Path.cwd() / "templates",  # Current working directory
+            ]
+
+            template_dir = None
+            for dir_path in possible_template_dirs:
+                if dir_path.exists():
+                    template_dir = dir_path
+                    break
+
+            if template_dir is None:
+                available_dirs = [str(d) for d in possible_template_dirs]
+                raise FileNotFoundError(
+                    f"Template directory not found in any of: {available_dirs}"
+                )
+
+            self.logger.info(f"Using template directory: {template_dir}")
 
             if not template_dir.exists():
                 raise FileNotFoundError(f"Template directory not found: {template_dir}")
 
             env = Environment(loader=FileSystemLoader(str(template_dir)))
-            template = env.get_template("prompt_template.md")
+            template = env.get_template("claudecode.md")
 
             # Prepare template data
             template_data = {
-                "timestamp": self._format_timestamp(),
-                "model": self._get_model(),
-                "duration": self._get_duration(),
                 "system": self._get_system_prompts(),
                 "tools": self._get_tools(),
-                "messages": self._get_messages(),
-                "response": self._get_response(),
             }
 
             # Render template
