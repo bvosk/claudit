@@ -18,23 +18,17 @@ class CaptureAddon:
         # Create timestamped filename for this session
         self.capture_file = os.path.join(self.captures_dir, "claudecode.json")
 
+        # Headers to mask for security
+        self.sensitive_headers = {
+            "x-api-key",
+            "authorization",
+            "cookie",
+            "x-auth-token",
+            "x-access-token",
+        }
+
         self.logger.info("CaptureAddon initialized in memory mode")
         self.logger.info(f"Capture file: {self.capture_file}")
-
-    # def request(self, flow: http.HTTPFlow) -> None:
-    #     """Called when a request is received"""
-    #     # Check if request is to api.anthropic.com
-    #     if not self._is_anthropic_request(flow):
-    #         return
-
-    #     self.request_count += 1
-    #     self.logger.info(
-    #         f"Intercepted request #{self.request_count}: {flow.request.method} {flow.request.pretty_url}"
-    #     )
-    #     self.logger.debug(
-    #         f"Request headers: {dict(flow.request.headers)}\n"
-    #         f"Request content length: {len(flow.request.content) if flow.request.content else 0} bytes"
-    #     )
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
@@ -49,11 +43,13 @@ class CaptureAddon:
             return
 
         try:
+            self.request_count += 1
+
             # Extract request information
             request_info = {
                 "method": flow.request.method,
                 "url": flow.request.pretty_url,
-                "headers": dict(flow.request.headers),
+                "headers": self._mask_sensitive_headers(dict(flow.request.headers)),
                 "content": self._safe_decode_content(flow.request.content),
                 "timestamp": flow.request.timestamp_start,
             }
@@ -118,6 +114,24 @@ class CaptureAddon:
         self.captured_data.append(error_data)
         self._write_capture_to_file(error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
+
+    def _mask_sensitive_headers(self, headers: dict) -> dict:
+        """Mask sensitive header values for security"""
+        masked_headers = {}
+        for key, value in headers.items():
+            key_lower = key.lower()
+            if key_lower in self.sensitive_headers:
+                if isinstance(value, str) and len(value) > 8:
+                    # Show first part and mask the rest
+                    if key_lower == "x-api-key" and value.startswith("sk-"):
+                        masked_headers[key] = f"{value[:8]}****"
+                    else:
+                        masked_headers[key] = f"{value[:4]}****"
+                else:
+                    masked_headers[key] = "****"
+            else:
+                masked_headers[key] = value
+        return masked_headers
 
     def _safe_decode_content(self, content: bytes | None) -> dict | str:
         """Safely decode content with fallback handling, parsing JSON when possible"""
