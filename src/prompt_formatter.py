@@ -1,5 +1,7 @@
 import json
 import logging
+import re
+import datetime
 from pathlib import Path
 from typing import Dict, Any
 from jinja2 import Environment, FileSystemLoader
@@ -32,6 +34,12 @@ class PromptFormatter:
     def _get_tools(self) -> list:
         """Extract tools from request content."""
         return self.request_content.get("tools", [])
+
+    def _scrub_content(self, content: str) -> str:
+        """Scrub sensitive or unwanted information from the content."""
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        content = re.sub(r"Today's date: " + today, "Today's date: [date]", content)
+        return content
 
     def format_to_markdown(self, output_filename: str = "claudecode.md") -> str:
         """
@@ -83,6 +91,9 @@ class PromptFormatter:
 
             # Render template
             rendered_content = template.render(**template_data)
+
+            # Scrub unwanted content
+            rendered_content = self._scrub_content(rendered_content)
 
             # Write to file
             output_path = prompts_dir / output_filename

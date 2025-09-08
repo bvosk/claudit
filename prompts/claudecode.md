@@ -170,7 +170,7 @@ Working directory: /app
 Is directory a git repo: No
 Platform: linux
 OS Version: Linux 6.15.11-orbstack-00539-g9885ebd8e3f4
-Today's date: 2025-09-05
+Today's date: [date]
 </env>
 You are powered by the model named Claude 3.5 Haiku. The exact model ID is claude-3-5-haiku-20241022.
 
