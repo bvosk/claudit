@@ -34,7 +34,7 @@ class ClaudeClient:
 
         try:
             # Construct the command with echo and pipe
-            cmd = "claude -p hello"
+            cmd = "claude -p hello --model haiku"
 
             # Run the command in shell
             result = subprocess.run(
