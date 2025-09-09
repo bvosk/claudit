@@ -9,12 +9,6 @@ This setup uses a pure Python implementation with mitmproxy to capture HTTP requ
    docker-compose up --build
    ```
 
-## Configuration
-
-Edit the `.env` file to customize:
-
-- `PROXY_PORT` - Proxy port (default: 8080)
-
 ## Architecture
 
 - **Pure Python Implementation**: No bash scripts, cleaner error handling
