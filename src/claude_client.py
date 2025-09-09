@@ -242,7 +242,7 @@ class ClaudeClient:
         result = self._run_subprocess(
             cmd=cmd,
             env=env,
-            timeout=30.0,
+            timeout=60.0,
             label="main",
             allow_error=True,
             log_preview=300,
