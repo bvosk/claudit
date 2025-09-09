@@ -1,8 +1,11 @@
 # syntax=docker/dockerfile:1
+ARG MITMPROXY_TAG=latest
+# Stage 0: Official Node.js image (provides latest current/LTS toolchain)
+FROM node:22-bookworm-slim AS nodejs
 
+# Stage 1: mitmproxy runtime
 # Pin-ready base image; override at build time with:
 #   docker build --build-arg MITMPROXY_TAG=9.0.1 -t mitm-capture .
-ARG MITMPROXY_TAG=latest
 FROM mitmproxy/mitmproxy:${MITMPROXY_TAG}
 
 USER root
@@ -19,9 +22,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
     && mv /root/.local/bin/uv /usr/local/bin/uv
 
-# Install Claude Code CLI tool
-RUN curl -fsSL https://claude.ai/install.sh | bash \
-    && mv /root/.local/bin/claude /usr/local/bin/claude
+# Copy Node.js toolchain from official image and enable corepack (optional package managers)
+COPY --from=nodejs /usr/local/bin/ /usr/local/bin/
+COPY --from=nodejs /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN corepack enable || true
+
+# Install Claude Code CLI via official installer script (version pinned for reproducibility)
+ARG CLAUDE_CODE_VERSION=1.0.106
+RUN curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh \
+    && bash /tmp/claude-install.sh "${CLAUDE_CODE_VERSION}" \
+    && mv /root/.local/bin/claude /usr/local/bin/claude \
+    && rm -f /tmp/claude-install.sh
 
 # Create a dedicated virtual environment for the app and prefer it on PATH
 ENV VENV_PATH=/opt/venv
