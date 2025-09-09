@@ -27,10 +27,11 @@ class ClaudeClient:
         env["HTTP_PROXY"] = self.proxy_url
         env["HTTPS_PROXY"] = self.proxy_url
 
-        # Ensure ANTHROPIC_API_KEY is available
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if "ANTHROPIC_API_KEY" not in env and api_key:
-            env["ANTHROPIC_API_KEY"] = api_key
+        # `claude` will not make an HTTP request unless ANTHROPIC_API_KEY is set
+        # So we just set a dummy value. Then `claude` will make requset
+        # but we are not charged!
+        if "ANTHROPIC_API_KEY" not in env:
+            env["ANTHROPIC_API_KEY"] = "DUMMY_KEY"
 
         try:
             # Construct the command with echo and pipe

@@ -26,25 +26,11 @@ jobs:
           echo "📅 Daily Claude Code Prompt Tracker"
           echo "🕐 Started at $(date)"
 
-          # Export the API key for docker compose
-          export ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
-
-          # Validate API key is set
-          if [ -z "$ANTHROPIC_API_KEY" ]; then
-            echo "❌ ANTHROPIC_API_KEY secret is not set"
-            exit 1
-          fi
-
-          echo "🔑 API key configured"
-
           # Run docker compose to capture the prompt
           echo "🐳 Running docker compose up..."
           docker compose up --build
 
           echo "✅ Capture process completed"
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
       - name: Check for prompt changes
         id: check_changes
         run: |
