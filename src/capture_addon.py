@@ -157,7 +157,7 @@ class CaptureAddon:
     def _write_capture_to_file(self, capture_data: dict) -> None:
         """Write captured data to timestamped JSON file"""
         try:
-            with open(self.capture_file, "a") as f:
+            with open(self.capture_file, "w") as f:
                 f.write(json.dumps(capture_data, indent=2) + "\n")
         except Exception as e:
             self.logger.error(f"Error writing capture to file: {e}")
