@@ -10,3 +10,5 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}

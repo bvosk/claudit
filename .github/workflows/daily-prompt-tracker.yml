@@ -8,6 +8,8 @@ on:
 jobs:
   track-prompt-changes:
     runs-on: ubuntu-latest
+    env:
+      LOG_LEVEL: DEBUG
 
     steps:
       - name: Checkout repository
