@@ -46,6 +46,14 @@ The test suite includes:
 - Configuration loading verification
 - Mock HTTP server integration for isolated testing
 
+### CI
+
+To test GH action runs on current branch, run:
+
+```sh
+gh workflow run daily-prompt-tracker.yml -r "$(git branch --show-current)"
+```
+
 ### Code Formatting
 
 This project uses [Black](https://black.readthedocs.io/) for consistent Python code formatting:
