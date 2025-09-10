@@ -34,7 +34,7 @@ docker exec -it mitmproxy-capture claude -p "hello" --model haiku
 
 ### Testing
 
-This project uses [uv](https://docs.astral.sh/uv/) for package management and testing:
+This project uses [uv](https://docs.astral.sh/uv/) for package management and testing with [syrupy](https://github.com/tophat/syrupy) for snapshot testing:
 
 **Run all tests:**
 ```bash
@@ -46,9 +46,9 @@ uv run pytest
 uv run pytest -v
 ```
 
-**Run specific test:**
+**Update snapshots when output changes:**
 ```bash
-uv run pytest tests/test_e2e_capture.py::TestMitmproxyCapture::test_end_to_end_capture -v
+uv run pytest --snapshot-update
 ```
 
 **Install development dependencies:**
@@ -57,10 +57,8 @@ uv sync
 ```
 
 The test suite includes:
-- End-to-end capture workflow testing
-- Custom headers validation
-- Configuration loading verification
-- Mock HTTP server integration for isolated testing
+- **Docker integration test**: Full end-to-end testing of the Docker container workflow using snapshot testing to validate generated markdown output
+- **Snapshot testing**: Uses syrupy to compare generated outputs against known good values, making it easy to detect changes and update expectations
 
 ### CI
 

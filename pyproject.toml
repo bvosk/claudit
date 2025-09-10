@@ -26,6 +26,7 @@ dev-dependencies = [
     "aiohttp>=3.8",
     "black",
     "pre-commit",
+    "syrupy",
 ]
 
 [tool.pytest.ini_options]
