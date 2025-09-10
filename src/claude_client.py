@@ -64,16 +64,7 @@ class ClaudeClient:
             friction in containerized environments.
         """
         env = os.environ.copy()
-
-        # Leave CURL / Python certificate checks relaxed (mitm CA not injected here)
-        env["CURL_CA_BUNDLE"] = ""
-        env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
-        env["PYTHONHTTPSVERIFY"] = "0"
-
-        # Ensure ANTHROPIC_BASE_URL is set (MitmproxyCapture sets it; keep if already present)
-        if "ANTHROPIC_BASE_URL" not in env:
-            env["ANTHROPIC_BASE_URL"] = f"http://localhost:{self.proxy_port}"
-
+        env["ANTHROPIC_BASE_URL"] = f"http://localhost:{self.proxy_port}"
         # This has to be set for CC to make a request. It does not
         # need to be valid since we're interested in the request, not the response.
         env["ANTHROPIC_API_KEY"] = "DUMMY"
