@@ -28,10 +28,6 @@ class ClaudeClient:
         self.last_result: Dict[str, Any] | None = None
         self.preflight_results: List[Dict[str, Any]] = []
 
-    # -----------------------
-    # Internal helper methods
-    # -----------------------
-
     def _mask(self, value: str | None, keep: int = 6) -> str:
         """Mask potentially sensitive values for logging."""
         if not value:
@@ -77,14 +73,9 @@ class ClaudeClient:
         env: dict,
         timeout: float,
         label: str,
-        log_preview: int = 300,
         allow_error: bool = True,
     ) -> Dict[str, Any]:
-        """
-        Generic subprocess runner for diagnostics and main command.
-        Returns a standardized payload; does NOT raise (except unexpected exceptions).
-        """
-        self.logger.info(f"[{label}] Starting command: {cmd} (timeout={timeout}s)")
+        """Generic subprocess runner. Returns standardized payload."""
         try:
             result = subprocess.run(
                 cmd,
@@ -92,67 +83,20 @@ class ClaudeClient:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                shell=True,  # Preserving original behavior
+                shell=True,
             )
-            stdout = result.stdout or ""
-            stderr = result.stderr or ""
-            rc = result.returncode
-
-            if rc == 0:
-                self.logger.info(
-                    f"[{label}] Completed rc=0 stdout_len={len(stdout)} stderr_len={len(stderr)}"
-                )
-            else:
-                level = logging.WARNING if allow_error else logging.ERROR
-                self.logger.log(
-                    level,
-                    f"[{label}] Non-zero rc={rc} stdout_len={len(stdout)} stderr_len={len(stderr)}",
-                )
-                if stderr:
-                    self.logger.debug(
-                        f"[{label}] stderr preview: {stderr[:log_preview].rstrip()}"
-                    )
 
             return {
                 "label": label,
                 "command": cmd,
-                "success": rc == 0,
-                "returncode": rc,
-                "stdout": stdout,
-                "stderr": stderr,
+                "success": result.returncode == 0,
+                "returncode": result.returncode,
+                "stdout": result.stdout or "",
+                "stderr": result.stderr or "",
             }
 
-        except subprocess.TimeoutExpired as e:
-            partial_stdout = (
-                e.stdout.decode() if isinstance(e.stdout, bytes) else (e.stdout or "")
-            )
-            partial_stderr = (
-                e.stderr.decode() if isinstance(e.stderr, bytes) else (e.stderr or "")
-            )
-            self.logger.error(
-                f"[{label}] Timed out after {timeout:.1f}s: {cmd} "
-                f"partial_stdout_len={len(partial_stdout)} partial_stderr_len={len(partial_stderr)}"
-            )
-            return {
-                "label": label,
-                "command": cmd,
-                "success": False,
-                "returncode": -1,
-                "stdout": partial_stdout,
-                "stderr": "Command timed out",
-            }
-        except FileNotFoundError:
-            self.logger.error(f"[{label}] Command not found: {cmd.split()[0]}")
-            return {
-                "label": label,
-                "command": cmd,
-                "success": False,
-                "returncode": -1,
-                "stdout": "",
-                "stderr": "Command not found",
-            }
         except Exception as e:
-            self.logger.error(f"[{label}] Unexpected error: {e}")
+            self.logger.error(f"[{label}] Command failed: {cmd}")
             return {
                 "label": label,
                 "command": cmd,
@@ -162,42 +106,22 @@ class ClaudeClient:
                 "stderr": str(e),
             }
 
-    # -----------------------
-    # Preflight diagnostics
-    # -----------------------
-
     def _run_preflight(self, env: dict) -> None:
-        """
-        Execute quick diagnostic commands to determine if the CLI responds
-        in a headless environment before issuing the main prompt command.
-        These results are stored in self.preflight_results and logged.
-        """
-        preflights = [
-            ("claude --version", 5.0, "preflight:version", True),
-            ("claude --help", 5.0, "preflight:help", False),
-        ]
+        """Check Claude CLI version and log it at INFO level."""
+        result = self._run_subprocess(
+            cmd="claude -v",
+            env=env,
+            timeout=5.0,
+            label="version",
+            allow_error=True,
+        )
+        self.preflight_results.append(result)
 
-        for cmd, timeout, label, output in preflights:
-            result = self._run_subprocess(
-                cmd=cmd,
-                env=env,
-                timeout=timeout,
-                label=label,
-                allow_error=True,
-                log_preview=400,
-            )
-            self.preflight_results.append(result)
-
-            self.logger.info(
-                f"[{label}] success={result['success']} rc={result['returncode']} "
-            )
-
-            if output:
-                self.logger.info(f"[{label}] stdout: {result['stdout'].strip()[:500]}")
-
-    # -----------------------
-    # Public API
-    # -----------------------
+        if result["success"]:
+            version = result["stdout"].strip()
+            self.logger.info(f"Claude CLI version: {version}")
+        else:
+            self.logger.warning("Failed to get Claude CLI version")
 
     def run_claude_command(self) -> Dict[str, Any]:
         """
@@ -230,7 +154,6 @@ class ClaudeClient:
             timeout=15.0,
             label="main",
             allow_error=True,
-            log_preview=300,
         )
 
         # Preserve original output contract
