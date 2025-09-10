@@ -28,7 +28,7 @@ COPY --from=nodejs /usr/local/lib/node_modules /usr/local/lib/node_modules
 RUN corepack enable || true
 
 # Install Claude Code CLI via official installer script (version pinned for reproducibility)
-ARG CLAUDE_CODE_VERSION=1.0.106
+ARG CLAUDE_CODE_VERSION=latest
 RUN curl -fsSL https://claude.ai/install.sh -o /tmp/claude-install.sh \
     && bash /tmp/claude-install.sh "${CLAUDE_CODE_VERSION}" \
     && mv /root/.local/bin/claude /usr/local/bin/claude \
