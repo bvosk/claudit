@@ -67,54 +67,25 @@ class ClaudeClient:
 
         return env
 
-    def _run_subprocess(
-        self,
-        cmd: str,
-        env: dict,
-        timeout: float,
-        label: str,
-        allow_error: bool = True,
-    ) -> Dict[str, Any]:
-        """Generic subprocess runner. Returns standardized payload."""
-        try:
-            result = subprocess.run(
-                cmd,
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                shell=True,
-            )
-
-            return {
-                "label": label,
-                "command": cmd,
-                "success": result.returncode == 0,
-                "returncode": result.returncode,
-                "stdout": result.stdout or "",
-                "stderr": result.stderr or "",
-            }
-
-        except Exception as e:
-            self.logger.error(f"[{label}] Command failed: {cmd}")
-            return {
-                "label": label,
-                "command": cmd,
-                "success": False,
-                "returncode": -1,
-                "stdout": "",
-                "stderr": str(e),
-            }
-
     def _run_preflight(self, env: dict) -> None:
         """Check Claude CLI version and log it at INFO level."""
-        result = self._run_subprocess(
-            cmd="claude -v",
+        subprocess_result = subprocess.run(
+            "claude -v",
             env=env,
+            capture_output=True,
+            text=True,
             timeout=5.0,
-            label="version",
-            allow_error=True,
+            shell=True,
         )
+
+        result = {
+            "label": "version",
+            "command": "claude -v",
+            "success": subprocess_result.returncode == 0,
+            "returncode": subprocess_result.returncode,
+            "stdout": subprocess_result.stdout or "",
+            "stderr": subprocess_result.stderr or "",
+        }
         self.preflight_results.append(result)
 
         if result["success"]:
@@ -148,21 +119,22 @@ class ClaudeClient:
         cmd = "claude -p hello --model haiku"
         self.logger.info(f"Starting Claude command: {cmd}")
 
-        result = self._run_subprocess(
-            cmd=cmd,
+        subprocess_result = subprocess.run(
+            cmd,
             env=env,
+            capture_output=True,
+            text=True,
             timeout=15.0,
-            label="main",
-            allow_error=True,
+            shell=True,
         )
 
         # Preserve original output contract
         payload = {
-            "success": result["success"],
-            "returncode": result["returncode"],
-            "stdout": result["stdout"],
-            "stderr": result["stderr"],
-            "command": result["command"],
+            "success": subprocess_result.returncode == 0,
+            "returncode": subprocess_result.returncode,
+            "stdout": subprocess_result.stdout or "",
+            "stderr": subprocess_result.stderr or "",
+            "command": cmd,
             "preflight": self.preflight_results,
         }
         self.last_result = payload
