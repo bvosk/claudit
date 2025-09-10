@@ -66,16 +66,6 @@ class ClaudeClient:
         """
         env = os.environ.copy()
 
-        # Clear any pre-existing proxy variables so the Claude CLI uses the base URL directly
-        for var in (
-            "HTTP_PROXY",
-            "HTTPS_PROXY",
-            "ALL_PROXY",
-            "NO_PROXY",
-            "SOCKS_PROXY",
-        ):
-            env[var] = ""
-
         # Leave CURL / Python certificate checks relaxed (mitm CA not injected here)
         env["CURL_CA_BUNDLE"] = ""
         env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
