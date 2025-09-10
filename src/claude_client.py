@@ -48,7 +48,6 @@ class ClaudeClient:
             f"PATH.count={len(path_entries)} "
             f"HTTP_PROXY={env.get('HTTP_PROXY')} "
             f"HTTPS_PROXY={env.get('HTTPS_PROXY')} "
-            f"ANTHROPIC_API_KEY(masked)={self._mask(env.get('ANTHROPIC_API_KEY'))}"
         )
         if self.logger.isEnabledFor(logging.DEBUG):
             preview = path_entries[:5]
@@ -75,9 +74,9 @@ class ClaudeClient:
         if "ANTHROPIC_BASE_URL" not in env:
             env["ANTHROPIC_BASE_URL"] = f"http://localhost:{self.proxy_port}"
 
-        # Ensure an API key is present so the CLI attempts a network call
-        if "ANTHROPIC_API_KEY" not in env:
-            env["ANTHROPIC_API_KEY"] = "DUMMY_KEY"
+        # This has to be set for CC to make a request. It does not
+        # need to be valid since we're interested in the request, not the response.
+        env["ANTHROPIC_API_KEY"] = "DUMMY"
 
         return env
 

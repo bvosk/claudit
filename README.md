@@ -8,10 +8,7 @@ This setup uses a pure Python implementation with mitmproxy running in reverse p
    ```bash
    docker-compose up --build
    ```
-2. **Provide your Anthropic API key (shell or .env):**
-   ```bash
-   export ANTHROPIC_API_KEY=sk-yourkey
-   ```
+2.
    mitm-capture automatically sets `ANTHROPIC_BASE_URL=http://localhost:8080` and runs mitmproxy in reverse mode so all Claude CLI inference requests are routed through (and captured by) the local proxy.
 
 ## Architecture
@@ -24,8 +21,7 @@ This setup uses a pure Python implementation with mitmproxy running in reverse p
 
 ## Reverse Proxy Mode
 
-The service starts mitmproxy in reverse mode targeting `https://api.anthropic.com` and sets `ANTHROPIC_BASE_URL` to `http://localhost:8080`. The Claude CLI sends inference traffic directly to the proxy host, which forwards upstream while logging `/v1/messages` requests and responses.  
-You only need to supply `ANTHROPIC_API_KEY`; the custom base URL is injected automatically.
+The service starts mitmproxy in reverse mode targeting `https://api.anthropic.com` and sets `ANTHROPIC_BASE_URL` to `http://localhost:8080`. The Claude CLI sends inference traffic directly to the proxy host, which forwards upstream while logging `/v1/messages` requests and responses.  The custom base URL is injected automatically.
 
 Captured traffic:
 - Written (overwritten per run) to `captures/claudecode.json`
