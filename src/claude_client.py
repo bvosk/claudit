@@ -57,24 +57,35 @@ class ClaudeClient:
     def _build_base_env(self) -> Dict[str, str]:
         """
         Construct and return the environment dict used for all invocations.
-        (No functional change relative to the main command's previous logic.)
+
+        Modified for reverse proxy mode:
+          - Do NOT set HTTP(S)_PROXY. We rely on ANTHROPIC_BASE_URL pointing
+            at the local mitm reverse proxy (set in MitmproxyCapture).
+          - Still relax TLS verification variables to avoid certificate
+            friction in containerized environments.
         """
         env = os.environ.copy()
 
-        # Clear and then set proxy-related variables (explicit baseline)
-        env["HTTP_PROXY"] = ""
-        env["HTTPS_PROXY"] = ""
+        # Clear any pre-existing proxy variables so the Claude CLI uses the base URL directly
+        for var in (
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "ALL_PROXY",
+            "NO_PROXY",
+            "SOCKS_PROXY",
+        ):
+            env[var] = ""
+
+        # Leave CURL / Python certificate checks relaxed (mitm CA not injected here)
         env["CURL_CA_BUNDLE"] = ""
         env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
         env["PYTHONHTTPSVERIFY"] = "0"
-        env["NO_PROXY"] = ""
-        env["SOCKS_PROXY"] = ""
 
-        # Set proxy (HTTP-only interception still applied to HTTPS via CONNECT)
-        env["HTTP_PROXY"] = self.proxy_url
-        env["HTTPS_PROXY"] = self.proxy_url  ## COMMENTING THIS OUT STOPS THE HANGING
+        # Ensure ANTHROPIC_BASE_URL is set (MitmproxyCapture sets it; keep if already present)
+        if "ANTHROPIC_BASE_URL" not in env:
+            env["ANTHROPIC_BASE_URL"] = f"http://localhost:{self.proxy_port}"
 
-        # Ensure an API key is present so the CLI *tries* to do something
+        # Ensure an API key is present so the CLI attempts a network call
         if "ANTHROPIC_API_KEY" not in env:
             env["ANTHROPIC_API_KEY"] = "DUMMY_KEY"
 

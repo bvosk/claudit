@@ -1,6 +1,7 @@
 import socket
 import asyncio
 import logging
+import os
 from typing import Optional, List, Dict
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
@@ -14,11 +15,24 @@ class MitmproxyCapture:
     returns any captured Anthropic API traffic. This version adds enhanced,
     purely observational logging for deeper diagnostics without altering
     functional behavior.
+
+    Updated to:
+      - Run mitmproxy in reverse proxy mode targeting Anthropic API.
+      - Set ANTHROPIC_BASE_URL to point at the local reverse proxy so the
+        Claude CLI directs traffic through mitmproxy without relying on
+        global HTTP(S)_PROXY variables alone.
     """
 
     def __init__(self, proxy_port: int = 8080):
         self.setup_logging()
         self.proxy_port = proxy_port
+        # Ensure the Claude CLI will call the local reverse proxy base.
+        # Reverse mode will forward upstream to https://api.anthropic.com.
+        os.environ["ANTHROPIC_BASE_URL"] = f"http://localhost:{proxy_port}"
+        self.logger.info(
+            "Set ANTHROPIC_BASE_URL for reverse proxy capture: %s",
+            os.environ["ANTHROPIC_BASE_URL"],
+        )
         self.master: Optional[DumpMaster] = None
         self.capture_addon = CaptureAddon()
         self.claude_client = ClaudeClient(self.proxy_port)
@@ -54,19 +68,31 @@ class MitmproxyCapture:
 
     def setup_mitmproxy(self):
         """
-        Configure and initialize mitmproxy DumpMaster with the capture addon.
+        Configure and initialize mitmproxy DumpMaster with the capture addon
+        in reverse proxy mode. All requests received on the local listener
+        are forwarded upstream to Anthropic while being intercepted.
         """
-        self.logger.info(f"Configuring mitmproxy (listen_port={self.proxy_port})")
+        self.logger.info(
+            f"Configuring mitmproxy in reverse mode (listen_port={self.proxy_port})"
+        )
         if not self.is_port_available(self.proxy_port):
             self.logger.error(
                 "Port %d is already in use before mitmproxy startup", self.proxy_port
             )
             raise RuntimeError(f"Port {self.proxy_port} is already in use")
 
-        opts = options.Options(listen_port=self.proxy_port, confdir="/root/.mitmproxy")
+        # Enable reverse proxy mode to upstream Anthropic API.
+        # Equivalent CLI: --mode reverse:https://api.anthropic.com
+        opts = options.Options(
+            listen_port=self.proxy_port,
+            confdir="/root/.mitmproxy",
+            mode=["reverse:https://api.anthropic.com"],
+        )
         self.master = DumpMaster(opts)
         self.master.addons.add(self.capture_addon)
-        self.logger.debug("mitmproxy DumpMaster created; capture addon registered")
+        self.logger.debug(
+            "mitmproxy DumpMaster created in reverse mode; capture addon registered"
+        )
 
     async def start_proxy(self):
         """
