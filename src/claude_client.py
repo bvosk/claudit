@@ -12,7 +12,6 @@ class ClaudeClient:
         self.proxy_url = f"http://localhost:{proxy_port}"
         self.logger = logging.getLogger(__name__)
         self.last_result: Dict[str, Any] | None = None
-        self.preflight_results: List[Dict[str, Any]] = []
 
     def _mask(self, value: str | None, keep: int = 6) -> str:
         if not value:
@@ -61,7 +60,6 @@ class ClaudeClient:
             "stdout": subprocess_result.stdout or "",
             "stderr": subprocess_result.stderr or "",
         }
-        self.preflight_results.append(result)
 
         if result["success"]:
             version = result["stdout"].strip()
@@ -110,7 +108,6 @@ class ClaudeClient:
             "stdout": subprocess_result.stdout or "",
             "stderr": subprocess_result.stderr or "",
             "command": cmd,
-            "preflight": self.preflight_results,
         }
         self.last_result = payload
         return payload
