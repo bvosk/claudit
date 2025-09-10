@@ -6,20 +6,6 @@ from typing import Dict, Any, List
 
 
 class ClaudeClient:
-    """
-    Lightweight wrapper for invoking the Claude CLI while routing traffic
-    through a local mitmproxy instance.
-
-    This version adds:
-      - Preflight diagnostics: runs `claude --version` and `claude --help`
-        before the main prompt command to observe whether the binary is
-        responsive in a non-interactive, headless context.
-      - Extensive diagnostic logging (unchanged from previous enhancement).
-
-    Behavioral semantics of the main invocation remain the same:
-      - Returns a dict with success/returncode/stdout/stderr/command.
-      - Still times out the main command after 30s.
-    """
 
     def __init__(self, proxy_port: int = 8080):
         self.proxy_port = proxy_port
@@ -29,7 +15,6 @@ class ClaudeClient:
         self.preflight_results: List[Dict[str, Any]] = []
 
     def _mask(self, value: str | None, keep: int = 6) -> str:
-        """Mask potentially sensitive values for logging."""
         if not value:
             return "<missing>"
         if len(value) <= keep:
@@ -37,7 +22,6 @@ class ClaudeClient:
         return f"{value[:keep]}****(len={len(value)})"
 
     def _log_environment_summary(self, env: dict) -> None:
-        """Emit a concise summary of key environment aspects for debugging."""
         path_entries = env.get("PATH", "").split(":")
         self.logger.debug(
             "Claude invocation environment summary: "
@@ -50,15 +34,6 @@ class ClaudeClient:
             self.logger.debug(f"PATH preview (first {len(preview)}): {preview}")
 
     def _build_base_env(self) -> Dict[str, str]:
-        """
-        Construct and return the environment dict used for all invocations.
-
-        Modified for reverse proxy mode:
-          - Do NOT set HTTP(S)_PROXY. We rely on ANTHROPIC_BASE_URL pointing
-            at the local mitm reverse proxy (set in MitmproxyCapture).
-          - Still relax TLS verification variables to avoid certificate
-            friction in containerized environments.
-        """
         env = os.environ.copy()
         env["ANTHROPIC_BASE_URL"] = f"http://localhost:{self.proxy_port}"
         # This has to be set for CC to make a request. It does not
@@ -68,7 +43,7 @@ class ClaudeClient:
         return env
 
     def _run_preflight(self, env: dict) -> None:
-        """Check Claude CLI version and log it at INFO level."""
+
         subprocess_result = subprocess.run(
             "claude -v",
             env=env,
