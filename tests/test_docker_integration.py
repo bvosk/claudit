@@ -9,8 +9,7 @@ def test_docker_container_generates_markdown(snapshot):
         test_output_dir = Path(temp_dir) / "test_outputs"
         test_output_dir.mkdir()
 
-        # Pin Claude Code version for reproducibility
-        claude_code_version = "latest"  # TODO: Pin to specific version like "2.3.0"
+        claude_code_version = "1.0.110"  # Pinned for consistency
 
         try:
             project_root = Path(__file__).parent.parent
