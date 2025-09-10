@@ -13,7 +13,7 @@ from prompt_formatter import PromptFormatter
 # Configure centralized logging
 def setup_logging():
     """Set up centralized logging configuration"""
-    log_level = os.getenv("LOG_LEVEL", "WARNING").upper()
+    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
     numeric_level = getattr(logging, log_level, logging.WARNING)
 
     # Configure root logger

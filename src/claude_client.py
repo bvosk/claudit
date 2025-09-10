@@ -173,11 +173,11 @@ class ClaudeClient:
         These results are stored in self.preflight_results and logged.
         """
         preflights = [
-            ("claude --version", 5.0, "preflight:version"),
-            ("claude --help", 5.0, "preflight:help"),
+            ("claude --version", 5.0, "preflight:version", True),
+            ("claude --help", 5.0, "preflight:help", False),
         ]
 
-        for cmd, timeout, label in preflights:
+        for cmd, timeout, label, output in preflights:
             result = self._run_subprocess(
                 cmd=cmd,
                 env=env,
@@ -188,18 +188,12 @@ class ClaudeClient:
             )
             self.preflight_results.append(result)
 
-            # Summarize outcomes at INFO level
-            summary = (
+            self.logger.info(
                 f"[{label}] success={result['success']} rc={result['returncode']} "
-                f"stdout_len={len(result['stdout'])} stderr_len={len(result['stderr'])}"
             )
-            self.logger.info(summary)
 
-            # If stdout is short, log inline for convenience
-            if result["stdout"] and len(result["stdout"]) < 200:
-                self.logger.debug(
-                    f"[{label}] stdout inline: {result['stdout'].strip()}"
-                )
+            if output:
+                self.logger.info(f"[{label}] stdout: {result['stdout'].strip()[:500]}")
 
     # -----------------------
     # Public API
