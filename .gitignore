@@ -2,3 +2,4 @@
 captures/
 __pycache__/
 .claude-trace
+.idea/
