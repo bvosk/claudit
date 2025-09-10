@@ -72,7 +72,7 @@ class ClaudeClient:
 
         # Set proxy (HTTP-only interception still applied to HTTPS via CONNECT)
         env["HTTP_PROXY"] = self.proxy_url
-        env["HTTPS_PROXY"] = self.proxy_url
+        env["HTTPS_PROXY"] = self.proxy_url  ## COMMENTING THIS OUT STOPS THE HANGING
 
         # Ensure an API key is present so the CLI *tries* to do something
         if "ANTHROPIC_API_KEY" not in env:
