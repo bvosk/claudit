@@ -7,7 +7,10 @@ import os
 import asyncio
 
 from mitm_capture import MitmproxyCapture
-from prompt_formatter import PromptFormatter
+from prompt_formatter import render_prompt_markdown
+from models import CapturedRequest
+from pathlib import Path
+from datetime import datetime, timezone
 
 
 # Configure centralized logging
@@ -88,8 +91,41 @@ async def async_main():
     print(f"Captured {len(captured_data)} requests")
 
     if captured_data:
-        formatter = PromptFormatter(captured_data[0])
-        formatter.format_to_markdown("claudecode.md")
+        # Convert raw JSON data to CapturedRequest
+        # This is a temporary conversion until capture_addon is refactored to emit CapturedRequest objects
+        raw_data = captured_data[0]
+
+        # Extract data from the raw capture format
+        request_data = raw_data.get("request", {})
+        response_data = raw_data.get("response", {})
+
+        captured_request = CapturedRequest(
+            id=raw_data.get("id", 1),
+            timestamp=datetime.fromisoformat(
+                raw_data.get("timestamp", datetime.now(timezone.utc).isoformat())
+            ),
+            method=request_data.get("method", "POST"),
+            url=request_data.get("url", ""),
+            request_headers=request_data.get("headers", {}),
+            request_body=request_data.get("content", ""),
+            response_status=response_data.get("status_code"),
+            response_headers=response_data.get("headers", {}),
+            response_body=response_data.get("content", ""),
+            duration_ms=raw_data.get("duration_ms"),
+            error=raw_data.get("error_message") if raw_data.get("error") else None,
+        )
+
+        # Render markdown using pure function
+        markdown_content = render_prompt_markdown(captured_request)
+
+        # Handle file I/O in app.py
+        prompts_dir = Path("prompts")
+        prompts_dir.mkdir(exist_ok=True)
+        output_path = prompts_dir / "claudecode.md"
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(markdown_content)
+
+        print(f"Markdown written to {output_path}")
 
 
 def main():

@@ -1,23 +1,3 @@
-"""
-Core domain models and configuration dataclasses for the decoupled architecture.
-
-This module intentionally contains ONLY pure data structures, light validation,
-and deterministic helper methods. No side-effects (network, file I/O, logging)
-should occur here to preserve testability and reusability.
-
-Planned Usage (per refactor plan):
-  - ProxyConfig: Passed into generic mitm proxy layer to configure listener & target
-  - CaptureConfig: Passed into capture addon to drive filtering / masking behavior
-  - CapturedRequest: Structured record produced by capture layer & consumed by
-                     formatting / higher coordination logic.
-
-All validation is performed eagerly in dataclass __post_init__ methods so that
-invalid state cannot silently propagate. An explicit `.validate()` method is also
-exposed for ergonomic re-validation in tests if mutated (though mutation of
-frozen models is discouraged and not supported here except for `CapturedRequest`
-which may be constructed incrementally in some workflows).
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -43,8 +23,6 @@ class ValidationError(ValueError):
 
 
 def _validate_port(port: int) -> None:
-    if not isinstance(port, int):
-        raise ValidationError("Port must be an integer")
     if not (1 <= port <= 65535):
         raise ValidationError(f"Port {port} out of valid range 1-65535")
 
@@ -61,10 +39,6 @@ def _validate_url(url: str, field_name: str = "url") -> None:
         raise ValidationError(
             f"{field_name} missing network location (host) portion: {url}"
         )
-
-
-def _normalize_header_key(key: str) -> str:
-    return key.strip()
 
 
 def _mask_value(value: str) -> str:
