@@ -2,7 +2,7 @@ import subprocess
 import logging
 import os
 import shutil
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 class ClaudeClient:
@@ -12,25 +12,6 @@ class ClaudeClient:
         self.proxy_url = f"http://localhost:{proxy_port}"
         self.logger = logging.getLogger(__name__)
         self.last_result: Dict[str, Any] | None = None
-
-    def _mask(self, value: str | None, keep: int = 6) -> str:
-        if not value:
-            return "<missing>"
-        if len(value) <= keep:
-            return "<redacted>"
-        return f"{value[:keep]}****(len={len(value)})"
-
-    def _log_environment_summary(self, env: dict) -> None:
-        path_entries = env.get("PATH", "").split(":")
-        self.logger.debug(
-            "Claude invocation environment summary: "
-            f"PATH.count={len(path_entries)} "
-            f"HTTP_PROXY={env.get('HTTP_PROXY')} "
-            f"HTTPS_PROXY={env.get('HTTPS_PROXY')} "
-        )
-        if self.logger.isEnabledFor(logging.DEBUG):
-            preview = path_entries[:5]
-            self.logger.debug(f"PATH preview (first {len(preview)}): {preview}")
 
     def _build_base_env(self) -> Dict[str, str]:
         env = os.environ.copy()
@@ -68,16 +49,10 @@ class ClaudeClient:
             self.logger.warning("Failed to get Claude CLI version")
 
     def run_claude_command(self) -> Dict[str, Any]:
-        """
-        Execute the Claude CLI with a minimal prompt to induce a network request.
-        Adds preflight diagnostics first. Returns payload structure:
-          success, returncode, stdout, stderr, command
-        """
         self.logger.info("Preparing to invoke Claude CLI command")
 
         # Build & log environment
         env = self._build_base_env()
-        self._log_environment_summary(env)
 
         # Resolve executable path for transparency
         claude_path = shutil.which("claude")
