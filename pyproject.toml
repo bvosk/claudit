@@ -23,6 +23,8 @@ sources = ["src"]
 dev-dependencies = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "pytest-subprocess",
+    "pytest-mock",
     "aiohttp>=3.8",
     "black",
     "pre-commit",
