@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: claude_prompt
+# name: test_docker_container_v1_10_110_generates_markdown[1.0.110][claude_prompt]
   '''
   # System Prompt
   
@@ -1307,7 +1307,7 @@
   
   '''
 # ---
-# name: test_docker_container_v1_10_110_generates_markdown[1.0.110][claude_prompt]
+# name: test_docker_container_v1_10_110_generates_markdown[latest][claude_prompt]
   '''
   # System Prompt
   
