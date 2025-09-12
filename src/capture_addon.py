@@ -4,6 +4,8 @@ import json
 import os
 from datetime import datetime
 
+from claude_client import ClaudeClient
+
 
 class CaptureAddon:
     def __init__(self):
@@ -127,6 +129,33 @@ class CaptureAddon:
                 masked_headers[key] = value
         return masked_headers
 
+    def _scrub_json_text_fields(self, data: dict) -> dict:
+        """Recursively scrub text fields in JSON data structures"""
+        if isinstance(data, dict):
+            result = {}
+            for key, value in data.items():
+                if isinstance(value, str):
+                    result[key] = ClaudeClient.scrub_prompt_text(value)
+                elif isinstance(value, dict):
+                    result[key] = self._scrub_json_text_fields(value)
+                elif isinstance(value, list):
+                    result[key] = [
+                        (
+                            ClaudeClient.scrub_prompt_text(item)
+                            if isinstance(item, str)
+                            else (
+                                self._scrub_json_text_fields(item)
+                                if isinstance(item, dict)
+                                else item
+                            )
+                        )
+                        for item in value
+                    ]
+                else:
+                    result[key] = value
+            return result
+        return data
+
     def _safe_decode_content(self, content: bytes | None) -> dict | str:
         """Safely decode content with fallback handling, parsing JSON when possible"""
         if not content:
@@ -134,11 +163,18 @@ class CaptureAddon:
 
         try:
             decoded = content.decode("utf-8")
+            # Scrub dynamic Claude-specific content from the decoded text
+            decoded = ClaudeClient.scrub_prompt_text(decoded)
+
             # Try to parse as JSON for structured display
             try:
-                return json.loads(decoded)
+                parsed_json = json.loads(decoded)
+                # If it's JSON with text content, scrub that too
+                if isinstance(parsed_json, dict):
+                    parsed_json = self._scrub_json_text_fields(parsed_json)
+                return parsed_json
             except json.JSONDecodeError:
-                # Not JSON, return as string
+                # Not JSON, return as scrubbed string
                 return decoded
         except UnicodeDecodeError:
             try:

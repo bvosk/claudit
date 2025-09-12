@@ -16,7 +16,7 @@ class ClaudeClient:
         # Precompile pattern that identifies the dynamic "You can use the following tools..." section
         # We'll remove from that line down to the first blank line that follows, to stabilize snapshots.
         self._tools_block_start_pattern = re.compile(
-            r"^You can use the following tools", re.MULTILINE
+            r"^You can use the following tools.*?:", re.MULTILINE
         )
 
     def _build_base_env(self) -> Dict[str, str]:
@@ -94,7 +94,8 @@ class ClaudeClient:
         canonical lead-in line and extends until a blank line or end of text.
         """
         pattern = re.compile(
-            r"^You can use the following tools.*?(?:\n\n|\Z)", re.MULTILINE | re.DOTALL
+            r"^You can use the following tools.*?:.*?(?:\n\n|\Z)",
+            re.MULTILINE | re.DOTALL,
         )
         return re.sub(pattern, "", text)
 
