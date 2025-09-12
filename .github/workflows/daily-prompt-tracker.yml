@@ -13,10 +13,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Fetch full history to enable proper diffing
           fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
       - name: Set up Docker
         run: |
@@ -59,8 +60,9 @@ jobs:
           echo "💾 Committing changes..."
 
           # Configure git
-          git config --local user.email "claudit@githubactions.com"
-          git config --local user.name "Claudit"
+          # https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # Add the changed file
           git add prompts/
@@ -71,7 +73,7 @@ jobs:
 
           # Push the changes
           echo "🚀 Pushing to main branch..."
-          git push origin main
+          git push
 
           echo "✅ Changes committed and pushed successfully"
 

@@ -4,34 +4,30 @@
 
 This setup uses a pure Python implementation with mitmproxy running in reverse proxy mode to capture Anthropic API inference HTTP requests inside a Docker container.
 
+## Tools
+
+- Package manager: [uv](https://docs.astral.sh/uv/)
+- Testing: [pytest](https://docs.pytest.org/)
+- Snapshots: [syrupy](https://github.com/tophat/syrupy)
+- Task runner: [mise](https://mise.jdx.dev/)
+- Formatter: [black](https://black.readthedocs.io/)
+
 ## Usage
 
-Run this project on the host:
+This project uses `mise` as a task runner. To see available tasks, run:
 
-```bash
-mitm-capture
 ```
-
-To install development dependencies, run:
-```bash
-uv sync
+> mise tasks
+Name                   Description
+install                Install development dependencies
+run-container          Run inside docker container with build
+run-container-build    Run inside docker container
+run-host               Run mitm-capture on the host
+test                   Run tests (excluding slow tests)
+test-all               Run all tests including slow tests
+test-update-snapshots  Update snapshots when output changes
+test-verbose           Run tests with verbose output
 ```
-
-Run inside the docker container with:
-
-```bash
-   docker-compose up --build
-```
-
-Remember to first install dependencies:
-
-```bash
-uv sync
-```
-
-## Testing
-
-This project uses [uv](https://docs.astral.sh/uv/) for package management and testing with [syrupy](https://github.com/tophat/syrupy) for snapshot testing:
 
 **Run tests:**
 ```bash
