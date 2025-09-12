@@ -73,7 +73,7 @@ async def capture_claude_traffic():
         return []
 
 
-async def async_main():
+async def async_main(output_dir=None):
     # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
@@ -104,7 +104,10 @@ async def async_main():
         markdown_content = render_prompt_markdown(clean_prompt)
 
         # Handle file I/O in app.py
-        prompts_dir = Path("prompts")
+        if output_dir:
+            prompts_dir = Path(output_dir)
+        else:
+            prompts_dir = Path("prompts")
         prompts_dir.mkdir(exist_ok=True)
         output_path = prompts_dir / "claudecode.md"
         with open(output_path, "w", encoding="utf-8") as f:
@@ -113,8 +116,8 @@ async def async_main():
         print(f"Markdown written to {output_path}")
 
 
-def main():
-    asyncio.run(async_main())
+def main(output_dir=None):
+    asyncio.run(async_main(output_dir))
 
 
 if __name__ == "__main__":
