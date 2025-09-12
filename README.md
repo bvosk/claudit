@@ -8,8 +8,6 @@ This setup uses a pure Python implementation with mitmproxy running in reverse p
    ```bash
    docker-compose up --build
    ```
-2.
-   mitm-capture automatically sets `ANTHROPIC_BASE_URL=http://localhost:8080` and runs mitmproxy in reverse mode so all Claude CLI inference requests are routed through (and captured by) the local proxy.
 
 ## Architecture
 
@@ -26,11 +24,6 @@ The service starts mitmproxy in reverse mode targeting `https://api.anthropic.co
 Captured traffic:
 - Written (overwritten per run) to `captures/claudecode.json`
 - First captured exchange also rendered to `claudecode.md`
-
-Run your own test prompt inside the container (already done automatically by the entrypoint):
-```bash
-docker exec -it mitmproxy-capture claude -p "hello" --model haiku
-```
 
 ### Testing
 
