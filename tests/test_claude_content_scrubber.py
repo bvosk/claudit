@@ -1,6 +1,6 @@
 """Tests for ClaudeContentScrubber"""
 
-import pytest
+# removed unused pytest import
 from datetime import datetime, timezone
 from unittest.mock import patch
 

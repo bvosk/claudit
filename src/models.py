@@ -456,7 +456,7 @@ class Prompt:
     system: List[Dict[str, Any]]
     timestamp: datetime
     tools: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Optional[Dict[str, Any]] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not isinstance(self.system, list):

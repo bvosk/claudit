@@ -7,7 +7,7 @@ It's designed to be the single source of truth for all Claude content cleaning l
 
 import re
 import copy
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from models import Prompt
@@ -55,7 +55,7 @@ class ClaudeContentScrubber:
         )
 
     @classmethod
-    def scrub_text_content(cls, text: str) -> str:
+    def scrub_text_content(cls, text: Optional[str]) -> Optional[str]:
         """
         Scrub dynamic content from plain text.
 

@@ -2,11 +2,11 @@
 
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import json
 
 from claude_client import ClaudeClient
-from models import Prompt, ValidationError
+from models import Prompt
 
 
 class TestClaudeClientExtractPrompt:
@@ -40,6 +40,7 @@ class TestClaudeClientExtractPrompt:
         assert result.system[0]["text"] == "You are a helpful assistant."
         assert len(result.tools) == 1
         assert result.tools[0]["name"] == "test_tool"
+        assert result.metadata is not None
         assert result.metadata["source"] == "claude_client"
         assert result.metadata["capture_id"] == 1
 
@@ -216,6 +217,7 @@ class TestClaudeClientExtractPrompt:
         client = ClaudeClient()
         result = client.extract_prompt(captured_data)
 
+        assert result.metadata is not None
         assert result.metadata["source"] == "claude_client"
         assert result.metadata["capture_id"] == 42
         assert result.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
@@ -243,6 +245,7 @@ class TestClaudeClientExtractPrompt:
 
         # Should use the first item (id=2)
         assert result.system[0]["text"] == "Second capture"
+        assert result.metadata is not None
         assert result.metadata["capture_id"] == 2
 
     def test_extract_prompt_creates_valid_prompt_object(self):
