@@ -4,7 +4,7 @@
 
 This setup uses a pure Python implementation with mitmproxy running in reverse proxy mode to capture Anthropic API inference HTTP requests inside a Docker container.
 
-## Tools
+## Development Tools
 
 - Package manager: [uv](https://docs.astral.sh/uv/)
 - Testing: [pytest](https://docs.pytest.org/)
@@ -29,25 +29,9 @@ test-update-snapshots  Update snapshots when output changes
 test-verbose           Run tests with verbose output
 ```
 
-**Run tests:**
-```bash
-uv run pytest -m "not slow"
-```
+## Agent Instructions
 
-This skips tests marked as slow. To include slow tests, run:
+### Mise tasks
 
-```bash
-uv run pytest
-```
-
-**Run with verbose output:**
-```bash
-uv run pytest -v
-```
-
-**Update snapshots when output changes:**
-```bash
-uv run pytest --snapshot-update
-```
-
-Run slow tests only to validate your final work. Between edits, skipping slow tests is recommended.
+- You MUST use `mise` to run all routine tasks. Check if there is a configured `mise` tasks before running any bash commands.
+- Whenever the mise tasks are updated, you MUSt update the "Usage" section of this file to reflect the changes.
