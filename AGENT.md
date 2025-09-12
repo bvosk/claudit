@@ -31,11 +31,15 @@ uv sync
 
 ## Testing
 
-### Testing
-
 This project uses [uv](https://docs.astral.sh/uv/) for package management and testing with [syrupy](https://github.com/tophat/syrupy) for snapshot testing:
 
-**Run all tests:**
+**Run tests:**
+```bash
+uv run pytest -m "not slow"
+```
+
+This skips tests marked as slow. To include slow tests, run:
+
 ```bash
 uv run pytest
 ```
@@ -49,3 +53,5 @@ uv run pytest -v
 ```bash
 uv run pytest --snapshot-update
 ```
+
+Run slow tests only to validate your final work. Between edits, skipping slow tests is recommended.

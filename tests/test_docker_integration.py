@@ -1,8 +1,10 @@
 import subprocess
 import tempfile
+import pytest
 from pathlib import Path
 
 
+@pytest.mark.slow
 def test_docker_container_generates_markdown(snapshot):
     # Create a temporary directory for test outputs
     with tempfile.TemporaryDirectory() as temp_dir:
