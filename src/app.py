@@ -5,6 +5,8 @@ import signal
 import logging
 import os
 import asyncio
+from contextlib import redirect_stdout, redirect_stderr
+import io
 
 from mitm_capture import MitmproxyCapture
 from prompt_formatter import render_prompt_markdown
@@ -73,15 +75,9 @@ async def capture_claude_traffic():
         return []
 
 
-async def async_main(output_dir=None):
-    # Set up signal handlers
+async def async_main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-
-    # Capture Claude HTTP traffic (suppress mitmproxy output)
-    from contextlib import redirect_stdout, redirect_stderr
-    import io
-
     stdout_capture = io.StringIO()
     stderr_capture = io.StringIO()
 
@@ -91,23 +87,14 @@ async def async_main(output_dir=None):
     print(f"Captured {len(captured_data)} requests")
 
     if captured_data:
-        # Create Claude client to extract prompt data
         claude_client = ClaudeClient()
-
-        # Extract prompt from captured HTTP data
         prompt = claude_client.extract_prompt(captured_data)
 
-        # Scrub dynamic content for stable output
         clean_prompt = ClaudeContentScrubber.scrub_prompt_data(prompt)
 
-        # Render markdown using pure function
         markdown_content = render_prompt_markdown(clean_prompt)
 
-        # Handle file I/O in app.py
-        if output_dir:
-            prompts_dir = Path(output_dir)
-        else:
-            prompts_dir = Path("prompts")
+        prompts_dir = Path("prompts")
         prompts_dir.mkdir(exist_ok=True)
         output_path = prompts_dir / "claudecode.md"
         with open(output_path, "w", encoding="utf-8") as f:
@@ -116,8 +103,8 @@ async def async_main(output_dir=None):
         print(f"Markdown written to {output_path}")
 
 
-def main(output_dir=None):
-    asyncio.run(async_main(output_dir))
+def main():
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":
