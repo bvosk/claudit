@@ -3,3 +3,4 @@ captures/
 __pycache__/
 .claude-trace
 .idea/
+**/.DS_Store
