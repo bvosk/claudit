@@ -435,3 +435,51 @@ class CapturedRequest:
     # Alias to harmonize with earlier code that appended capture dicts
     def to_record(self) -> Dict[str, Any]:
         return self.as_dict()
+
+
+@dataclass
+class Prompt:
+    """
+    Generic prompt structure for any AI application.
+
+    This data class represents the essential components of an AI prompt:
+    system instructions and available tools. It's designed to be app-agnostic
+    and can work with Claude, OpenAI, or other AI systems.
+
+    Attributes:
+        system: List of system prompt message objects
+        tools: List of tool/function definitions available to the AI
+        timestamp: When this prompt was captured/created
+        metadata: Optional additional data for debugging or context
+    """
+
+    system: List[Dict[str, Any]]
+    timestamp: datetime
+    tools: List[Dict[str, Any]] = field(default_factory=list)
+    metadata: Optional[Dict[str, Any]] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.system, list):
+            raise ValidationError("system must be a list of message objects")
+        if not isinstance(self.tools, list):
+            raise ValidationError("tools must be a list of tool definition objects")
+        if not isinstance(self.timestamp, datetime):
+            raise ValidationError("timestamp must be datetime instance")
+
+        # Validate system messages have required structure
+        for i, msg in enumerate(self.system):
+            if not isinstance(msg, dict):
+                raise ValidationError(f"system[{i}] must be a dictionary")
+            if "type" not in msg or "text" not in msg:
+                raise ValidationError(f"system[{i}] must have 'type' and 'text' fields")
+
+        # Validate tool definitions have required structure
+        for i, tool in enumerate(self.tools):
+            if not isinstance(tool, dict):
+                raise ValidationError(f"tools[{i}] must be a dictionary")
+            if "name" not in tool:
+                raise ValidationError(f"tools[{i}] must have 'name' field")
+
+    def validate(self) -> None:
+        """Explicit re-validation hook."""
+        self.__post_init__()

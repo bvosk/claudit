@@ -3,7 +3,11 @@ import logging
 import os
 import shutil
 import re
-from typing import Dict, Any
+from typing import Dict, Any, List
+from datetime import datetime, timezone
+import json
+
+from models import Prompt
 
 
 class ClaudeClient:
@@ -79,25 +83,7 @@ class ClaudeClient:
         cleaned = text[:start] + remainder[split_index + 2 :]
         return cleaned.lstrip("\n")
 
-    @staticmethod
-    def scrub_prompt_text(text: str) -> str:
-        """
-        Public static helper for scrubbing dynamic tool capability sections from
-        captured Anthropic/Claude prompt text prior to formatting or snapshotting.
-
-        Unlike _scrub_dynamic_tooling_section (which is instance-based and
-        operates on CLI stdout/stderr), this static method can be imported and
-        applied to request/response payloads (e.g. in the formatter) without
-        instantiating a ClaudeClient.
-
-        It performs a conservative removal of any block that starts with the
-        canonical lead-in line and extends until a blank line or end of text.
-        """
-        pattern = re.compile(
-            r"^You can use the following tools.*?:.*?(?:\n\n|\Z)",
-            re.MULTILINE | re.DOTALL,
-        )
-        return re.sub(pattern, "", text)
+    # scrub_prompt_text method removed - content scrubbing now handled by ClaudeContentScrubber
 
     def run_claude_command(self) -> Dict[str, Any]:
         self.logger.info("Preparing to invoke Claude CLI command")
@@ -141,3 +127,69 @@ class ClaudeClient:
         }
         self.last_result = payload
         return payload
+
+    def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
+        """
+        Extract a Prompt object from captured HTTP data.
+
+        Parses the captured HTTP request data to extract system prompts and tools,
+        returning a clean Prompt object suitable for formatting.
+
+        Args:
+            captured_data: List of captured HTTP request/response dictionaries
+
+        Returns:
+            Prompt object with extracted system messages and tools
+
+        Raises:
+            ValueError: If no valid request data found or data is malformed
+        """
+        if not captured_data:
+            raise ValueError("No captured data provided")
+
+        # Use the first (most recent) capture
+        capture = captured_data[0]
+        request_data = capture.get("request", {})
+
+        # Extract timestamp
+        timestamp_str = capture.get("timestamp")
+        if timestamp_str:
+            try:
+                timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+            except ValueError:
+                timestamp = datetime.now(timezone.utc)
+        else:
+            timestamp = datetime.now(timezone.utc)
+
+        # Extract and parse request body
+        request_content = request_data.get("content", {})
+        if isinstance(request_content, str):
+            try:
+                request_content = json.loads(request_content)
+            except json.JSONDecodeError:
+                request_content = {}
+
+        if not isinstance(request_content, dict):
+            raise ValueError("Request content is not valid JSON")
+
+        # Extract system prompts
+        system_messages = request_content.get("system", [])
+        if not isinstance(system_messages, list):
+            system_messages = []
+
+        # Extract tools
+        tools = request_content.get("tools", [])
+        if not isinstance(tools, list):
+            tools = []
+
+        # Create metadata for debugging/logging
+        metadata = {
+            "source": "claude_client",
+            "capture_id": capture.get("id"),
+            "request_url": request_data.get("url", ""),
+            "request_method": request_data.get("method", ""),
+        }
+
+        return Prompt(
+            system=system_messages, timestamp=timestamp, tools=tools, metadata=metadata
+        )

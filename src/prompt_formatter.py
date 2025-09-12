@@ -7,21 +7,20 @@ from typing import Dict, Any
 
 from jinja2 import Environment, FileSystemLoader
 
-from models import CapturedRequest
+from models import Prompt
 
 
-def render_prompt_markdown(captured_request: CapturedRequest) -> str:
+def render_prompt_markdown(prompt: Prompt) -> str:
     logger = logging.getLogger(__name__)
 
-    request_content = _extract_request_content(captured_request)
     template_dir = _find_template_directory()
 
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     template = env.get_template("claudecode.md")
 
     template_data = {
-        "system": _get_system_prompts(request_content),
-        "tools": _get_tools(request_content),
+        "system": prompt.system,
+        "tools": prompt.tools,
     }
 
     try:
@@ -33,16 +32,7 @@ def render_prompt_markdown(captured_request: CapturedRequest) -> str:
     return _scrub_content(rendered_content)
 
 
-def _extract_request_content(captured_request: CapturedRequest) -> Dict[str, Any]:
-    body = captured_request.request_body
-    if isinstance(body, dict):
-        return body
-    if isinstance(body, str):
-        try:
-            return json.loads(body)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse request content as JSON: {e}") from e
-    raise ValueError("Request body is not parseable JSON")
+# Legacy functions removed - no longer needed since we get data directly from Prompt object
 
 
 def _find_template_directory() -> Path:
@@ -63,12 +53,7 @@ def _find_template_directory() -> Path:
     )
 
 
-def _get_system_prompts(request_content: Dict[str, Any]) -> list:
-    return request_content.get("system", [])
-
-
-def _get_tools(request_content: Dict[str, Any]) -> list:
-    return request_content.get("tools", [])
+# _get_system_prompts and _get_tools functions removed - data comes directly from Prompt object
 
 
 _DATE_PATTERN_PREFIX = "Today's date: "
