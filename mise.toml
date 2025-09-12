@@ -1,0 +1,34 @@
+[tools]
+uv = "latest"
+
+[tasks.install]
+description = "Install development dependencies"
+run = "uv sync"
+
+[tasks.run-host]
+description = "Run mitm-capture on the host"
+run = "mitm-capture"
+
+[tasks.run-container-build]
+description = "Run inside docker container"
+run = "docker-compose up"
+[tasks.run-container]
+description = "Run inside docker container with build"
+run = "docker-compose up --build"
+
+[tasks.test]
+description = "Run tests (excluding slow tests)"
+run = "uv run pytest -m \"not slow\""
+[tasks.test-all]
+description = "Run all tests including slow tests"
+run = "uv run pytest"
+[tasks.test-verbose]
+description = "Run tests with verbose output"
+run = "uv run pytest -v"
+[tasks.test-update-snapshots]
+description = "Update snapshots when output changes"
+run = "uv run pytest --snapshot-update"
+
+[tasks.format]
+description = "Format code with black"
+run = "uv run black ."
