@@ -12,20 +12,10 @@ class CaptureAddon:
         self.captured_data = []
 
         # Create captures directory if it doesn't exist
-        self.captures_dir = "captures"
-        os.makedirs(self.captures_dir, exist_ok=True)
+        os.makedirs("captures", exist_ok=True)
 
         # Create timestamped filename for this session
-        self.capture_file = os.path.join(self.captures_dir, "claudecode.json")
-
-        # Headers to mask for security
-        self.sensitive_headers = {
-            "x-api-key",
-            "authorization",
-            "cookie",
-            "x-auth-token",
-            "x-access-token",
-        }
+        self.capture_file = os.path.join("captures", "claudecode.json")
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
@@ -42,31 +32,25 @@ class CaptureAddon:
         try:
             self.request_count += 1
 
-            # Extract request information
-            request_info = {
-                "method": flow.request.method,
-                "url": flow.request.pretty_url,
-                "headers": self._mask_sensitive_headers(dict(flow.request.headers)),
-                "content": self._safe_decode_content(flow.request.content),
-                "timestamp": flow.request.timestamp_start,
-            }
-
-            # Extract response information
-            response_info = {
-                "status_code": flow.response.status_code,
-                "headers": dict(flow.response.headers),
-                "content": self._safe_decode_content(flow.response.content),
-                "timestamp": flow.response.timestamp_start,
-            }
-
             # Create capture record
             capture_data = {
                 "id": self.request_count,
                 "timestamp": datetime.fromtimestamp(
                     flow.response.timestamp_start
                 ).isoformat(),
-                "request": request_info,
-                "response": response_info,
+                "request": {
+                    "method": flow.request.method,
+                    "url": flow.request.pretty_url,
+                    "headers": self._mask_sensitive_headers(dict(flow.request.headers)),
+                    "content": self._safe_decode_content(flow.request.content),
+                    "timestamp": flow.request.timestamp_start,
+                },
+                "response": {
+                    "status_code": flow.response.status_code,
+                    "headers": dict(flow.response.headers),
+                    "content": self._safe_decode_content(flow.response.content),
+                    "timestamp": flow.response.timestamp_start,
+                },
                 "duration_ms": round(
                     (flow.response.timestamp_start - flow.request.timestamp_start)
                     * 1000,
@@ -111,10 +95,17 @@ class CaptureAddon:
 
     def _mask_sensitive_headers(self, headers: dict) -> dict:
         """Mask sensitive header values for security"""
+        sensitive_headers = {
+            "x-api-key",
+            "authorization",
+            "cookie",
+            "x-auth-token",
+            "x-access-token",
+        }
         masked_headers = {}
         for key, value in headers.items():
             key_lower = key.lower()
-            if key_lower in self.sensitive_headers:
+            if key_lower in sensitive_headers:
                 if isinstance(value, str) and len(value) > 8:
                     # Show first part and mask the rest
                     if key_lower == "x-api-key" and value.startswith("sk-"):

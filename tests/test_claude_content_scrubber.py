@@ -126,7 +126,7 @@ Some content after."""
             "text": "System prompt\n\nYou can use the following tools without approval: Bash(test)\n\nMore content",
         }
 
-        result = ClaudeContentScrubber._scrub_system_message(message)
+        result = ClaudeContentScrubber._scrub_dict(message)
 
         assert result["type"] == "text"
         assert "System prompt" in result["text"]
@@ -147,7 +147,7 @@ Some content after."""
             ],
         }
 
-        result = ClaudeContentScrubber._scrub_dict_recursively(test_dict)
+        result = ClaudeContentScrubber._scrub_dict(test_dict)
 
         # All dynamic content should be removed
         assert "You can use the following tools" not in str(result)
@@ -166,7 +166,7 @@ Some content after."""
             mock_dt.now.return_value.strftime.return_value = "2024-12-25"
 
             text = "Today's date: 2024-12-25 is Christmas!"
-            result = ClaudeContentScrubber._scrub_date_references(text)
+            result = ClaudeContentScrubber.scrub_text_content(text)
 
             assert result == "Today's date: [date] is Christmas!"
 
