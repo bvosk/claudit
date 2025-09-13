@@ -4,9 +4,8 @@ Claude-specific content scrubber.
 This module handles the scrubbing of dynamic or unwanted content from Claude prompts.
 """
 
-import re
 import copy
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 
 from models import Prompt
@@ -26,34 +25,18 @@ class ClaudeContentScrubber:
         )
 
     @classmethod
-    def scrub_text_content(cls, text: Optional[str]) -> Optional[str]:
+    def scrub_text_content(cls, text: str) -> str:
         """Scrub dynamic content from plain text."""
         if not text:
             return text
 
-        # Remove dynamic tool blocks
-        scrubbed = re.sub(
-            r"^You can use the following tools.*?:.*?(?:\n\n|\Z)",
-            "",
-            text,
-            flags=re.MULTILINE | re.DOTALL,
-        )
-
         # Replace date references
         today = datetime.now().strftime("%Y-%m-%d")
+
         if today:
-            scrubbed = scrubbed.replace(
-                f"Today's date: {today}", "Today's date: [date]"
-            )
+            return text.replace(f"Today's date: {today}", "Today's date: [date]")
 
-        return scrubbed
-
-    @classmethod
-    def scrub_tool_definitions(
-        cls, tools: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
-        """Scrub dynamic content from tool definitions."""
-        return [cls._scrub_dict(tool) for tool in tools]
+        return text
 
     @classmethod
     def _scrub_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:

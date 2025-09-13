@@ -50,6 +50,7 @@ RUN uv pip compile pyproject.toml -o /tmp/requirements.txt \
 
 # Copy the application source
 COPY . /app
+RUN rm -rf /app/.claude
 
 # Install the project itself into the venv without re-resolving dependencies
 RUN uv pip install --python "${VENV_PATH}/bin/python" --no-deps /app
