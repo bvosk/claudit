@@ -1270,7 +1270,7 @@ Usage notes:
 ```
 
 
-## KillBash
+## KillShell
 
 **Description:**
 
