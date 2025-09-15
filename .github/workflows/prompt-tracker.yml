@@ -1,4 +1,4 @@
-name: Daily Claude Code Prompt Tracker
+name: Claude Code Prompt Tracker
 
 on:
   schedule:
