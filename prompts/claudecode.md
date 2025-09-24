@@ -327,6 +327,7 @@ Usage notes:
   - It is very helpful if you write a clear, concise description of what this command does in 5-10 words.
   - If the output exceeds 30000 characters, output will be truncated before being returned to you.
   - You can use the `run_in_background` parameter to run the command in the background, which allows you to continue working while the command runs. You can monitor the output using the Bash tool as it becomes available. Never use `run_in_background` to run 'sleep' as it will return immediately. You do not need to use '&' at the end of the command when using this parameter.
+
   - VERY IMPORTANT: You MUST avoid using search commands like `find` and `grep`. Instead use Grep, Glob, or Task to search. You MUST avoid read tools like `cat`, `head`, and `tail`, and use Read to read files.
  - If you _still_ need to run `grep`, STOP. ALWAYS USE ripgrep at `rg` first, which all Claude Code users have pre-installed.
   - When issuing multiple commands, use the ';' or '&&' operator to separate them. DO NOT use newlines (newlines are ok in quoted strings).
@@ -1296,6 +1297,44 @@ Usage notes:
   },
   "required": [
     "shell_id"
+  ],
+  "type": "object"
+}
+```
+
+
+## SlashCommand
+
+**Description:**
+
+```
+Execute a slash command within the main conversation
+Usage:
+- `command` (required): The slash command to execute, including any arguments
+- Example: `command: "/review-pr 123"`
+Important Notes:
+- Only available slash commands can be executed.
+- Some commands may require arguments as shown in the command list above
+- If command validation fails, list up to 5 available commands, not all of them.
+- Do not use this tool if you are already processing a slash command with the same name as indicated by <command-message>{name_of_command} is running…</command-message>
+Available Commands:
+
+
+```
+
+**Schema:**
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "command": {
+      "description": "The slash command to execute with its arguments, e.g., \"/review-pr 123\"",
+      "type": "string"
+    }
+  },
+  "required": [
+    "command"
   ],
   "type": "object"
 }
