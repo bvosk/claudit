@@ -1,0 +1,10 @@
+Use the unified diff below to craft a git commit message following this exact template:
+
+<summary>
+
+<detailed description of changes>
+
+Guidelines:
+- Summary <= 72 characters, imperative mood, no trailing punctuation.
+- Detailed description should expand on the summary; use bullet points when enumerating changes.
+- Do not add code fences, quotes, or commentary outside the template.
