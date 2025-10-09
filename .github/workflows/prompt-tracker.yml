@@ -54,9 +54,18 @@ jobs:
             echo "changes_detected=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push changes
+      - name: Install llm tooling
         if: steps.check_changes.outputs.changes_detected == 'true'
         run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade llm llm-anthropic
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
           echo "💾 Committing changes..."
 
           # Configure git
@@ -67,9 +76,35 @@ jobs:
           # Add the changed file
           git add prompts/
 
-          # Create commit with timestamp
-          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
-          git commit -m "🤖 Update prompt"
+          if git diff --cached --quiet; then
+            echo "⚠️ No staged changes found after adding prompts/"
+            exit 0
+          fi
+
+          COMMIT_PROMPT_FILE=$(mktemp)
+          cat .github/commit-message-prompt.txt > "$COMMIT_PROMPT_FILE"
+          {
+            printf '\nDiff:\n'
+            git diff --cached
+          } >> "$COMMIT_PROMPT_FILE"
+
+          SYSTEM_PROMPT=$(cat .github/commit-message-system.txt)
+
+          echo "🧠 Generating commit message with Claude Sonnet 4.5..."
+          COMMIT_MESSAGE=$(llm -m claude-sonnet-4.5 -s "$SYSTEM_PROMPT" "$(cat "$COMMIT_PROMPT_FILE")")
+
+          if [ -z "$COMMIT_MESSAGE" ]; then
+            echo "❌ Failed to generate commit message"
+            rm "$COMMIT_PROMPT_FILE"
+            exit 1
+          fi
+
+          COMMIT_FILE=$(mktemp)
+          printf "%s\n" "$COMMIT_MESSAGE" > "$COMMIT_FILE"
+
+          # Create commit using generated message
+          git commit -F "$COMMIT_FILE"
+          rm "$COMMIT_FILE" "$COMMIT_PROMPT_FILE"
 
           # Push the changes
           echo "🚀 Pushing to main branch..."
