@@ -3,12 +3,10 @@ import tempfile
 import pytest
 from pathlib import Path
 
-import app
-
 
 @pytest.mark.slow
-@pytest.mark.parametrize("claude_code_version", ["latest", "1.0.110"])
-def test_docker_container_v1_10_110_generates_markdown(claude_code_version, snapshot):
+@pytest.mark.parametrize("claude_code_version", ["2.0.10"])
+def test_generates_markdown(claude_code_version, snapshot):
     with tempfile.TemporaryDirectory() as temp_dir:
         test_output_dir = Path(temp_dir) / "test_outputs"
         test_output_dir.mkdir()
