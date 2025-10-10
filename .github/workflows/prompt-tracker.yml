@@ -93,6 +93,9 @@ jobs:
           echo "🧠 Generating commit message with Claude Sonnet 4.5..."
           COMMIT_MESSAGE=$(llm -m claude-sonnet-4.5 -s "$SYSTEM_PROMPT" "$(cat "$COMMIT_PROMPT_FILE")")
 
+          # Prefix automated commits so they are easy to spot
+          COMMIT_MESSAGE="🤖 $COMMIT_MESSAGE"
+
           if [ -z "$COMMIT_MESSAGE" ]; then
             echo "❌ Failed to generate commit message"
             rm "$COMMIT_PROMPT_FILE"
