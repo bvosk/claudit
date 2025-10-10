@@ -1,26 +1,37 @@
-from mitmproxy import http
-import logging
-import json
-import os
 from datetime import datetime
+from typing import Sequence
+
+import json
+import logging
+import os
+
+from mitmproxy import http
 
 
 class CaptureAddon:
-    def __init__(self):
+    def __init__(
+        self,
+        *,
+        agent_name: str,
+        api_hosts: Sequence[str],
+        api_path_prefixes: Sequence[str],
+    ):
         self.logger = logging.getLogger(__name__)
         self.request_count = 0
         self.captured_data = []
+        self._api_hosts = tuple(host.lower() for host in api_hosts)
+        self._api_path_prefixes = tuple(api_path_prefixes)
 
         # Create captures directory if it doesn't exist
         os.makedirs("captures", exist_ok=True)
 
-        # Create timestamped filename for this session
-        self.capture_file = os.path.join("captures", "claudecode.json")
+        # Create agent-specific filename for this session
+        filename = f"{agent_name}.json" if agent_name else "capture.json"
+        self.capture_file = os.path.join("captures", filename)
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
-        # Check if request is to api.anthropic.com
-        if not self._is_anthropic_request(flow):
+        if not self._is_tracked_request(flow):
             return
 
         if not flow.response:
@@ -74,8 +85,7 @@ class CaptureAddon:
 
     def error(self, flow: http.HTTPFlow) -> None:
         """Called when a flow encounters an error"""
-        # Check if request is to api.anthropic.com
-        if not self._is_anthropic_request(flow):
+        if not self._is_tracked_request(flow):
             return
 
         error_data = {
@@ -137,12 +147,20 @@ class CaptureAddon:
             except UnicodeDecodeError:
                 return f"<binary data: {len(content)} bytes>"
 
-    def _is_anthropic_request(self, flow: http.HTTPFlow) -> bool:
-        """Check if the request is to api.anthropic.com"""
+    def _is_tracked_request(self, flow: http.HTTPFlow) -> bool:
+        """Check if the request matches the configured host/path filters."""
         try:
-            url = flow.request.url
-            return "api.anthropic.com/v1/messages" in url
-        except:
+            host = (flow.request.host or "").lower()
+            path = flow.request.path or ""
+
+            if self._api_hosts and host not in self._api_hosts:
+                return False
+
+            if not self._api_path_prefixes:
+                return True
+
+            return any(path.startswith(prefix) for prefix in self._api_path_prefixes)
+        except Exception:
             return False
 
     def _write_capture_to_file(self, capture_data: dict) -> None:

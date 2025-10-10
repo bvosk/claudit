@@ -8,12 +8,12 @@ import asyncio
 from contextlib import redirect_stdout, redirect_stderr
 import io
 
-from claudit.mitm_capture import MitmproxyCapture
-from claudit.prompt_formatter import render_prompt_markdown
-from claudit.claude_client import ClaudeClient
-from claudit.claude_content_scrubber import ClaudeContentScrubber
 from pathlib import Path
 
+from claudit.agent_client import AgentClient
+from claudit.claude_content_scrubber import ClaudeContentScrubber
+from claudit.mitm_capture import MitmproxyCapture
+from claudit.prompt_formatter import render_prompt_markdown
 
 # Configure centralized logging
 def setup_logging():
@@ -86,8 +86,8 @@ async def async_main():
     print(f"Captured {len(captured_data)} requests")
 
     if captured_data:
-        claude_client = ClaudeClient()
-        prompt = claude_client.extract_prompt(captured_data)
+        agent_client = AgentClient()
+        prompt = agent_client.extract_prompt(captured_data)
 
         clean_prompt = ClaudeContentScrubber.scrub_prompt_data(prompt)
 

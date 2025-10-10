@@ -1,43 +1,43 @@
-import socket
 import asyncio
 import logging
-import os
-from typing import Optional, List, Dict
+import socket
+from typing import Dict, List, Optional
+
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
+
+from claudit.agent_client import AgentClient
+from claudit.agents.base import AgentStrategy
+from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.capture_addon import CaptureAddon
-from claudit.claude_client import ClaudeClient
 
 
 class MitmproxyCapture:
     """
-    Orchestrates a mitmproxy instance, invokes the Claude CLI through it, and
+    Orchestrates a mitmproxy instance, invokes the agent CLI through it, and
     returns any captured Anthropic API traffic. This version adds enhanced,
     purely observational logging for deeper diagnostics without altering
-    functional behavior.
-
-    Updated to:
-      - Run mitmproxy in reverse proxy mode targeting Anthropic API.
-      - Set ANTHROPIC_BASE_URL to point at the local reverse proxy so the
-        Claude CLI directs traffic through mitmproxy without relying on
-        global HTTP(S)_PROXY variables alone.
+    functional behavior. Agents provide host/path filtering and CLI hooks via
+    strategy injection so capture logic stays decoupled from agent specifics.
     """
 
-    def __init__(self, proxy_port: int = 8080):
+    def __init__(
+        self,
+        proxy_port: int = 8080,
+        strategy: AgentStrategy | None = None,
+    ):
         self.setup_logging()
         self.proxy_port = proxy_port
-        # Ensure the Claude CLI will call the local reverse proxy base.
-        # Reverse mode will forward upstream to https://api.anthropic.com.
-        os.environ["ANTHROPIC_BASE_URL"] = f"http://localhost:{proxy_port}"
-        self.logger.info(
-            "Set ANTHROPIC_BASE_URL for reverse proxy capture: %s",
-            os.environ["ANTHROPIC_BASE_URL"],
-        )
+        self.strategy: AgentStrategy = strategy or ClaudeCodeStrategy()
         self.master: Optional[DumpMaster] = None
-        self.capture_addon = CaptureAddon()
-        self.claude_client = ClaudeClient(self.proxy_port)
+        self.capture_addon = CaptureAddon(
+            agent_name=self.strategy.name,
+            api_hosts=self.strategy.api_hosts(),
+            api_path_prefixes=self.strategy.api_path_prefixes(),
+        )
+        self.agent_client = AgentClient(self.proxy_port, strategy=self.strategy)
         # Introspection only; not used for control flow
-        self.last_claude_result: Dict | None = None
+        self.last_agent_result: Dict | None = None
 
         self.setup_mitmproxy()
 
@@ -159,21 +159,21 @@ class MitmproxyCapture:
                 await asyncio.sleep(0.05)
 
     # --------------------------------------------------------------------- #
-    # Claude invocation
+    # Agent invocation
     # --------------------------------------------------------------------- #
 
-    def _run_claude_and_store(self):
+    def _run_agent_and_store(self):
         """
-        Invoke the Claude CLI via the ClaudeClient while proxy is active.
+        Invoke the agent CLI via the AgentClient while proxy is active.
         """
-        self.logger.info("Invoking Claude CLI through proxy (port=%d)", self.proxy_port)
-        result = self.claude_client.run_claude_command()
-        self.last_claude_result = result
+        self.logger.info("Invoking agent CLI through proxy (port=%d)", self.proxy_port)
+        result = self.agent_client.run_agent_command()
+        self.last_agent_result = result
         snippet = (result.get("stderr") or result.get("stdout") or "")[:160].replace(
             "\n", " "
         )
         self.logger.info(
-            "Claude CLI finished success=%s rc=%s snippet='%s'",
+            "Agent CLI finished success=%s rc=%s snippet='%s'",
             result.get("success"),
             result.get("returncode"),
             snippet,
@@ -188,7 +188,7 @@ class MitmproxyCapture:
         Run a full capture session:
           1. Start mitmproxy
           2. Wait for listener readiness
-          3. Execute Claude CLI (in thread executor)
+          3. Execute agent CLI (in thread executor)
           4. Shutdown mitmproxy
           5. Return captured Anthropic API flows
         """
@@ -204,7 +204,7 @@ class MitmproxyCapture:
 
             # Offload CLI invocation to thread executor to avoid blocking loop
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, self._run_claude_and_store)
+            await loop.run_in_executor(None, self._run_agent_and_store)
 
             # Snapshot captured flows
             captured_data = self.capture_addon.captured_data.copy()

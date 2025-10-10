@@ -37,6 +37,13 @@ class AgentStrategy(Protocol):
         """
         ...
 
+    def version_command(self) -> CommandSpec | None:
+        """
+        Optional CLI command used to report tool version information before
+        running the main agent workflow. Returning None skips the preflight.
+        """
+        ...
+
     def api_hosts(self) -> Sequence[str]:
         """Hosts whose traffic should be captured for this agent."""
         ...

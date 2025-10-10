@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import Any, cast
 
-from models import (
+from claudit.models import (
     ProxyConfig,
     CaptureConfig,
     CapturedRequest,

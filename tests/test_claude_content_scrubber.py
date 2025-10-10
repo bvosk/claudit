@@ -4,8 +4,8 @@
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from claude_content_scrubber import ClaudeContentScrubber
-from models import Prompt
+from claudit.claude_content_scrubber import ClaudeContentScrubber
+from claudit.models import Prompt
 
 
 class TestClaudeContentScrubber:
@@ -13,7 +13,7 @@ class TestClaudeContentScrubber:
 
     def test_scrub_text_content_with_date_reference(self):
         """Test scrubbing of date references from text"""
-        with patch("claude_content_scrubber.datetime") as mock_dt:
+        with patch("claudit.claude_content_scrubber.datetime") as mock_dt:
             mock_dt.now.return_value.strftime.return_value = "2025-09-11"
 
             text_with_date = "Today's date: 2025-09-11\nOther content here."
@@ -36,7 +36,7 @@ class TestClaudeContentScrubber:
 
     def test_scrub_date_references_specific_date(self):
         """Test date reference scrubbing with specific date"""
-        with patch("claude_content_scrubber.datetime") as mock_dt:
+        with patch("claudit.claude_content_scrubber.datetime") as mock_dt:
             mock_dt.now.return_value.strftime.return_value = "2024-12-25"
 
             text = "Today's date: 2024-12-25 is Christmas!"

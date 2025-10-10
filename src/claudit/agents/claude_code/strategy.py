@@ -25,6 +25,13 @@ class ClaudeCodeStrategy(AgentStrategy):
             timeout_seconds=15.0,
         )
 
+    def version_command(self) -> CommandSpec | None:
+        return CommandSpec(
+            command="claude -v",
+            use_shell=True,
+            timeout_seconds=5.0,
+        )
+
     def environment_overrides(self, proxy_port: int) -> Dict[str, str]:
         return {
             "ANTHROPIC_BASE_URL": f"http://localhost:{proxy_port}",

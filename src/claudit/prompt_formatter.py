@@ -5,7 +5,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from models import Prompt
+from claudit.models import Prompt
 
 
 def render_prompt_markdown(prompt: Prompt) -> str:

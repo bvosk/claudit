@@ -1,62 +1,53 @@
-"""Tests for ClaudeClient"""
+"""Tests for AgentClient"""
 
-import pytest
+import json
+import subprocess
 from datetime import datetime, timezone
 from unittest.mock import patch
-import json
 
-from claude_client import ClaudeClient
-from models import Prompt
+import pytest
+
+from claudit.agent_client import AgentClient
+from claudit.agents.base import CommandSpec
+from claudit.models import Prompt
 
 
-class TestClaudeClientToolingScrub:
-    """Tests for the tooling section scrubber"""
+class _DummyStrategy:
+    name = "dummy"
 
-    def setup_method(self):
-        self.client = ClaudeClient()
+    def __init__(self, version_spec: CommandSpec | None):
+        self._version_spec = version_spec
 
-    def test_scrubs_tooling_block_with_trailing_blank(self):
-        text = (
-            "Intro line\n"
-            "You can use the following tools:\n"
-            "- file_browser\n"
-            "- terminal\n"
-            "\n"
-            "Rest of instructions\n"
+    def command(self) -> CommandSpec:
+        return CommandSpec(
+            command="echo main",
+            use_shell=True,
+            timeout_seconds=12.0,
         )
 
-        cleaned = self.client._scrub_dynamic_tooling_section(text)
+    def version_command(self) -> CommandSpec | None:
+        return self._version_spec
 
-        assert (
-            cleaned
-            == "Intro line\nRest of instructions\n"
-        ), "Tooling block should be removed while preserving surrounding text"
+    def environment_overrides(self, proxy_port: int) -> dict[str, str]:
+        return {"DUMMY_PROXY_PORT": str(proxy_port)}
 
-    def test_leaves_text_without_tooling_block(self):
-        text = "Intro line\nHelpful instructions\n"
+    def api_hosts(self):
+        return ()
 
-        cleaned = self.client._scrub_dynamic_tooling_section(text)
+    def api_path_prefixes(self):
+        return ()
 
-        assert cleaned == text
+    def scrub_cli_output(self, text: str) -> str:
+        return text
 
-    def test_scrubs_tooling_block_without_terminating_blank(self):
-        text = (
-            "Intro line\n"
-            "You can use the following tools:\n"
-            "- github\n"
-            "- shell\n"
-        )
-
-        cleaned = self.client._scrub_dynamic_tooling_section(text)
-
-        assert cleaned == "Intro line\n", "Trailing content should be trimmed when no blank line terminator exists"
+    def extract_prompt(self, captured_data):
+        return Prompt(system=[], tools=[], timestamp=datetime.now(timezone.utc), metadata={})
 
 
-class TestClaudeClientExtractPrompt:
-    """Test suite for ClaudeClient.extract_prompt method"""
+class TestAgentClientExtractPrompt:
+    """Test suite for AgentClient.extract_prompt method"""
 
     def test_extract_prompt_basic(self):
-        """Test basic prompt extraction from captured data"""
         captured_data = [
             {
                 "id": 1,
@@ -74,7 +65,7 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         assert isinstance(result, Prompt)
@@ -84,11 +75,10 @@ class TestClaudeClientExtractPrompt:
         assert len(result.tools) == 1
         assert result.tools[0]["name"] == "test_tool"
         assert result.metadata is not None
-        assert result.metadata["source"] == "claude_client"
+        assert result.metadata["source"] == "claude_code"
         assert result.metadata["capture_id"] == 1
 
     def test_extract_prompt_with_string_content(self):
-        """Test extraction when request content is a JSON string"""
         content_dict = {
             "system": [{"type": "text", "text": "System prompt"}],
             "tools": [],
@@ -105,7 +95,7 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         assert len(result.system) == 1
@@ -113,14 +103,12 @@ class TestClaudeClientExtractPrompt:
         assert result.tools == []
 
     def test_extract_prompt_empty_data(self):
-        """Test extraction fails with empty data"""
-        client = ClaudeClient()
+        client = AgentClient()
 
         with pytest.raises(ValueError, match="No captured data provided"):
             client.extract_prompt([])
 
     def test_extract_prompt_malformed_json(self):
-        """Test extraction handles malformed JSON gracefully"""
         captured_data = [
             {
                 "id": 1,
@@ -129,46 +117,42 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
-        # Should create empty prompt when JSON is malformed
         assert result.system == []
         assert result.tools == []
 
     def test_extract_prompt_non_dict_content(self):
-        """Test extraction fails with non-dict content after parsing"""
         captured_data = [
             {
                 "id": 1,
-                "request": {"content": '"just a string"'},  # Valid JSON but not a dict
+                "request": {"content": '"just a string"'},
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
 
         with pytest.raises(ValueError, match="Request content is not valid JSON"):
             client.extract_prompt(captured_data)
 
     def test_extract_prompt_missing_system_tools(self):
-        """Test extraction with missing system/tools fields"""
         captured_data = [
             {
                 "id": 1,
                 "request": {
-                    "content": {"other_field": "value"}  # Missing system and tools
+                    "content": {"other_field": "value"}
                 },
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         assert result.system == []
         assert result.tools == []
 
     def test_extract_prompt_invalid_system_type(self):
-        """Test extraction when system field is not a list"""
         captured_data = [
             {
                 "id": 1,
@@ -178,15 +162,13 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         assert result.system == []
         assert result.tools == []
 
     def test_extract_prompt_timestamp_parsing(self):
-        """Test various timestamp format handling"""
-        # Test with Z suffix
         captured_data = [
             {
                 "id": 1,
@@ -195,18 +177,17 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         expected_time = datetime.fromisoformat("2025-01-01T12:00:00+00:00")
         assert result.timestamp == expected_time
 
     def test_extract_prompt_invalid_timestamp(self):
-        """Test extraction with invalid timestamp falls back to current time"""
-        with patch("claude_client.datetime") as mock_dt:
+        with patch("claudit.agents.claude_code.strategy.datetime") as mock_dt:
             mock_now = datetime(2025, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
             mock_dt.now.return_value = mock_now
-            mock_dt.fromisoformat = datetime.fromisoformat  # Keep original method
+            mock_dt.fromisoformat = datetime.fromisoformat
 
             captured_data = [
                 {
@@ -218,34 +199,92 @@ class TestClaudeClientExtractPrompt:
                 }
             ]
 
-            client = ClaudeClient()
+            client = AgentClient()
             result = client.extract_prompt(captured_data)
 
-            assert result.timestamp == mock_now
+        assert result.timestamp == mock_now
 
     def test_extract_prompt_missing_timestamp(self):
-        """Test extraction with missing timestamp uses current time"""
-        with patch("claude_client.datetime") as mock_dt:
+        with patch("claudit.agents.claude_code.strategy.datetime") as mock_dt:
             mock_now = datetime(2025, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
             mock_dt.now.return_value = mock_now
 
             captured_data = [
                 {
                     "id": 1,
-                    # No timestamp field
                     "request": {
                         "content": {"system": [{"type": "text", "text": "test"}]}
                     },
                 }
             ]
 
-            client = ClaudeClient()
+            client = AgentClient()
             result = client.extract_prompt(captured_data)
 
-            assert result.timestamp == mock_now
+        assert result.timestamp == mock_now
+
+
+class TestAgentClientRunCommand:
+    def test_run_agent_command_uses_strategy_version_command(self):
+        version_spec = CommandSpec(
+            command="tool --version",
+            use_shell=False,
+            timeout_seconds=7.0,
+        )
+        strategy = _DummyStrategy(version_spec=version_spec)
+        client = AgentClient(strategy=strategy)
+
+        with patch("claudit.agent_client.subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                subprocess.CompletedProcess(
+                    args=version_spec.command,
+                    returncode=0,
+                    stdout="1.2.3\n",
+                    stderr="",
+                ),
+                subprocess.CompletedProcess(
+                    args="echo main",
+                    returncode=0,
+                    stdout="done",
+                    stderr="",
+                ),
+            ]
+
+            result = client.run_agent_command()
+
+        assert mock_run.call_count == 2
+
+        version_call = mock_run.call_args_list[0]
+        assert version_call.args[0] == version_spec.command
+        assert version_call.kwargs["shell"] is version_spec.use_shell
+        assert version_call.kwargs["timeout"] == version_spec.timeout_seconds
+        assert version_call.kwargs["env"]["DUMMY_PROXY_PORT"] == str(client.proxy_port)
+
+        main_call = mock_run.call_args_list[1]
+        assert main_call.args[0] == "echo main"
+        assert main_call.kwargs["shell"] is True
+        assert main_call.kwargs["timeout"] == strategy.command().timeout_seconds
+        assert result["command"] == "echo main"
+
+    def test_run_agent_command_skips_preflight_when_strategy_has_no_version(self):
+        strategy = _DummyStrategy(version_spec=None)
+        client = AgentClient(strategy=strategy)
+
+        with patch("claudit.agent_client.subprocess.run") as mock_run:
+            mock_run.return_value = subprocess.CompletedProcess(
+                args="echo main",
+                returncode=0,
+                stdout="done",
+                stderr="",
+            )
+
+            client.run_agent_command()
+
+        assert mock_run.call_count == 1
+        call = mock_run.call_args_list[0]
+        assert call.args[0] == "echo main"
 
     def test_extract_prompt_metadata_complete(self):
-        """Test extraction creates complete metadata"""
         captured_data = [
             {
                 "id": 42,
@@ -257,17 +296,16 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
         assert result.metadata is not None
-        assert result.metadata["source"] == "claude_client"
+        assert result.metadata["source"] == "claude_code"
         assert result.metadata["capture_id"] == 42
         assert result.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
         assert result.metadata["request_method"] == "POST"
 
     def test_extract_prompt_multiple_captures_uses_first(self):
-        """Test extraction uses first (most recent) capture when multiple provided"""
         captured_data = [
             {
                 "id": 2,
@@ -283,16 +321,14 @@ class TestClaudeClientExtractPrompt:
             },
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
-        # Should use the first item (id=2)
         assert result.system[0]["text"] == "Second capture"
         assert result.metadata is not None
         assert result.metadata["capture_id"] == 2
 
     def test_extract_prompt_creates_valid_prompt_object(self):
-        """Test that extracted Prompt passes validation"""
         captured_data = [
             {
                 "id": 1,
@@ -305,9 +341,8 @@ class TestClaudeClientExtractPrompt:
             }
         ]
 
-        client = ClaudeClient()
+        client = AgentClient()
         result = client.extract_prompt(captured_data)
 
-        # Should not raise ValidationError
         result.validate()
         assert isinstance(result, Prompt)

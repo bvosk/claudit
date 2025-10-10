@@ -3,8 +3,8 @@ import pytest
 from pathlib import Path
 from datetime import datetime, timezone
 
-from models import Prompt
-from prompt_formatter import render_prompt_markdown
+from claudit.models import Prompt
+from claudit.prompt_formatter import render_prompt_markdown
 
 
 # Test data fixtures
@@ -32,11 +32,11 @@ class TestRenderPromptMarkdown:
     def test_render_prompt_markdown_success(self, mocker, sample_prompt):
         # Setup mocks
         mock_template_dir = Path("/mock/templates")
-        mock_find_template = mocker.patch("prompt_formatter._find_template_directory")
+        mock_find_template = mocker.patch("claudit.prompt_formatter._find_template_directory")
         mock_find_template.return_value = mock_template_dir
 
-        mock_loader = mocker.patch("prompt_formatter.FileSystemLoader")
-        mock_env = mocker.patch("prompt_formatter.Environment")
+        mock_loader = mocker.patch("claudit.prompt_formatter.FileSystemLoader")
+        mock_env = mocker.patch("claudit.prompt_formatter.Environment")
 
         mock_template = mocker.Mock()
         mock_env.return_value.get_template.return_value = mock_template
