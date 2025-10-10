@@ -19,6 +19,7 @@ This project uses `mise` as a task runner. To see available tasks, run:
 ```
 > mise tasks
 Name                   Description
+format                 Format code with black
 install                Install development dependencies
 run-container          Run inside docker container with build
 run-container-build    Run inside docker container
@@ -27,6 +28,7 @@ test                   Run tests (excluding slow tests)
 test-all               Run all tests including slow tests
 test-update-snapshots  Update snapshots when output changes
 test-verbose           Run tests with verbose output
+typecheck              Typecheck code with basedpyright
 ```
 
 ## Agent Instructions
