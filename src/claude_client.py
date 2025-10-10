@@ -83,8 +83,6 @@ class ClaudeClient:
         cleaned = text[:start] + remainder[split_index + 2 :]
         return cleaned.lstrip("\n")
 
-    # scrub_prompt_text method removed - content scrubbing now handled by ClaudeContentScrubber
-
     def run_claude_command(self) -> Dict[str, Any]:
         self.logger.info("Preparing to invoke Claude CLI command")
 

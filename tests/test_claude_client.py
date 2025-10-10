@@ -9,6 +9,49 @@ from claude_client import ClaudeClient
 from models import Prompt
 
 
+class TestClaudeClientToolingScrub:
+    """Tests for the tooling section scrubber"""
+
+    def setup_method(self):
+        self.client = ClaudeClient()
+
+    def test_scrubs_tooling_block_with_trailing_blank(self):
+        text = (
+            "Intro line\n"
+            "You can use the following tools:\n"
+            "- file_browser\n"
+            "- terminal\n"
+            "\n"
+            "Rest of instructions\n"
+        )
+
+        cleaned = self.client._scrub_dynamic_tooling_section(text)
+
+        assert (
+            cleaned
+            == "Intro line\nRest of instructions\n"
+        ), "Tooling block should be removed while preserving surrounding text"
+
+    def test_leaves_text_without_tooling_block(self):
+        text = "Intro line\nHelpful instructions\n"
+
+        cleaned = self.client._scrub_dynamic_tooling_section(text)
+
+        assert cleaned == text
+
+    def test_scrubs_tooling_block_without_terminating_blank(self):
+        text = (
+            "Intro line\n"
+            "You can use the following tools:\n"
+            "- github\n"
+            "- shell\n"
+        )
+
+        cleaned = self.client._scrub_dynamic_tooling_section(text)
+
+        assert cleaned == "Intro line\n", "Trailing content should be trimmed when no blank line terminator exists"
+
+
 class TestClaudeClientExtractPrompt:
     """Test suite for ClaudeClient.extract_prompt method"""
 
