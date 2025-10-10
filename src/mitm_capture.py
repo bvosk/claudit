@@ -39,6 +39,8 @@ class MitmproxyCapture:
         # Introspection only; not used for control flow
         self.last_claude_result: Dict | None = None
 
+        self.setup_mitmproxy()
+
     # --------------------------------------------------------------------- #
     # Logging setup
     # --------------------------------------------------------------------- #

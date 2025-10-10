@@ -65,7 +65,6 @@ async def capture_claude_traffic():
     try:
         logger.info("Starting HTTP traffic capture")
         capture = MitmproxyCapture()
-        capture.setup_mitmproxy()
         data = await capture.capture_and_return()
         logger.info(f"Captured {len(data)} requests successfully")
         return data
