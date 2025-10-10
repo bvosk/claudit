@@ -1,6 +1,8 @@
 import pytest
+
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
+from typing import Any, cast
 
 from models import (
     ProxyConfig,
@@ -347,7 +349,7 @@ def test_prompt_invalid_system_not_list():
     """Test Prompt with invalid system (not a list)"""
     with pytest.raises(ValidationError, match="system must be a list"):
         Prompt(
-            system="not a list",
+            system=cast(Any, "not a list"),
             timestamp=datetime.now(timezone.utc),
         )
 
@@ -357,7 +359,7 @@ def test_prompt_invalid_tools_not_list():
     with pytest.raises(ValidationError, match="tools must be a list"):
         Prompt(
             system=[{"type": "text", "text": "Hello"}],
-            tools="not a list",
+            tools=cast(Any, "not a list"),
             timestamp=datetime.now(timezone.utc),
         )
 
@@ -367,7 +369,7 @@ def test_prompt_invalid_timestamp():
     with pytest.raises(ValidationError, match="timestamp must be datetime"):
         Prompt(
             system=[{"type": "text", "text": "Hello"}],
-            timestamp="not a datetime",
+            timestamp=cast(Any, "not a datetime"),
         )
 
 
@@ -375,7 +377,7 @@ def test_prompt_invalid_system_message_not_dict():
     """Test Prompt with system message that's not a dictionary"""
     with pytest.raises(ValidationError, match="system\\[0\\] must be a dictionary"):
         Prompt(
-            system=["not a dict"],
+            system=cast(Any, ["not a dict"]),
             timestamp=datetime.now(timezone.utc),
         )
 
@@ -407,7 +409,7 @@ def test_prompt_invalid_tool_not_dict():
     with pytest.raises(ValidationError, match="tools\\[0\\] must be a dictionary"):
         Prompt(
             system=[{"type": "text", "text": "Hello"}],
-            tools=["not a dict"],
+            tools=cast(Any, ["not a dict"]),
             timestamp=datetime.now(timezone.utc),
         )
 
@@ -467,6 +469,6 @@ def test_prompt_validate_method():
     prompt.validate()
 
     # Manually corrupt data and test validation fails
-    prompt.system = "corrupted"
+    setattr(prompt, "system", cast(Any, "corrupted"))
     with pytest.raises(ValidationError):
         prompt.validate()
