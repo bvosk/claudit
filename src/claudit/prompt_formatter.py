@@ -1,13 +1,9 @@
-import json
 import logging
-import re
-import datetime
 from pathlib import Path
-from typing import Dict, Any
 
 from jinja2 import Environment, FileSystemLoader
 
-from models import Prompt
+from claudit.models import Prompt
 
 
 def render_prompt_markdown(prompt: Prompt) -> str:
@@ -18,8 +14,13 @@ def render_prompt_markdown(prompt: Prompt) -> str:
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     template = env.get_template("claudecode.md")
 
+    system_messages = [
+        {"type": "text", "text": entry if isinstance(entry, str) else str(entry)}
+        for entry in prompt.system
+    ]
+
     template_data = {
-        "system": prompt.system,
+        "system": system_messages,
         "tools": prompt.tools,
     }
 
@@ -29,10 +30,7 @@ def render_prompt_markdown(prompt: Prompt) -> str:
         logger.error("Template rendering failed: %s", e)
         raise
 
-    return _scrub_content(rendered_content)
-
-
-# Legacy functions removed - no longer needed since we get data directly from Prompt object
+    return rendered_content
 
 
 def _find_template_directory() -> Path:
@@ -51,23 +49,6 @@ def _find_template_directory() -> Path:
         + ", ".join(str(p) for p in candidates)
         + ")"
     )
-
-
-# _get_system_prompts and _get_tools functions removed - data comes directly from Prompt object
-
-
-_DATE_PATTERN_PREFIX = "Today's date: "
-
-
-def _scrub_content(content: str) -> str:
-    today = datetime.date.today().strftime("%Y-%m-%d")
-    if today:
-        content = re.sub(
-            re.escape(f"{_DATE_PATTERN_PREFIX}{today}"),
-            f"{_DATE_PATTERN_PREFIX}[date]",
-            content,
-        )
-    return content
 
 
 __all__ = ["render_prompt_markdown"]

@@ -1,0 +1,105 @@
+{
+  "id": 4,
+  "timestamp": "2025-10-12T05:31:06.818421",
+  "request": {
+    "method": "POST",
+    "url": "https://api.anthropic.com/v1/messages?beta=true",
+    "headers": {
+      "accept": "application/json",
+      "anthropic-beta": "fine-grained-tool-streaming-2025-05-14",
+      "anthropic-dangerous-direct-browser-access": "true",
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+      "user-agent": "claude-cli/2.0.14 (external, sdk-cli)",
+      "x-api-key": "****",
+      "x-app": "cli",
+      "x-stainless-arch": "arm64",
+      "x-stainless-lang": "js",
+      "x-stainless-os": "Linux",
+      "x-stainless-package-version": "0.60.0",
+      "x-stainless-retry-count": "0",
+      "x-stainless-runtime": "node",
+      "x-stainless-runtime-version": "v24.3.0",
+      "x-stainless-timeout": "600",
+      "Connection": "keep-alive",
+      "Host": "api.anthropic.com",
+      "Accept-Encoding": "gzip, deflate, br, zstd",
+      "Content-Length": "54273"
+    },
+    "content": {
+      "model": "claude-3-5-haiku-20241022",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "hello",
+              "cache_control": { "type": "ephemeral" }
+            }
+          ]
+        }
+      ],
+      "temperature": 1,
+      "system": [
+        {
+          "type": "text",
+          "text": "You are a Claude agent, built on Anthropic's Claude Agent SDK.",
+          "cache_control": { "type": "ephemeral" }
+        },
+        {
+          "type": "text",
+          "text": "\nYou are an interactive CLI tool that helps users with software engineering tasks. Use the instructions below and the tools available to you to assist the user.\n\nIMPORTANT: Assist with defensive security tasks only. Refuse to create, modify, or improve code that may be used maliciously. Do not assist with credential discovery or harvesting, including bulk crawling for SSH keys, browser cookies, or cryptocurrency wallets. Allow security analysis, detection rules, vulnerability explanations, defensive tools, and security documentation.\nIMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.\n\nIf the user asks for help or wants to give feedback inform them of the following:\n- /help: Get help with using Claude Code\n- To give feedback, users should report the issue at https://github.com/anthropics/claude-code/issues\n\nWhen the user directly asks about Claude Code (eg. \"can Claude Code do...\", \"does Claude Code have...\"), or asks in second person (eg. \"are you able...\", \"can you do...\"), or asks how to use a specific Claude Code feature (eg. implement a hook, write a slash command, or install an MCP server), use the WebFetch tool to gather information to answer the question from Claude Code docs. The list of available docs is available at https://docs.claude.com/en/docs/claude-code/claude_code_docs_map.md.\n\n# Tone and style\n- Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.\n- Your output will be displayed on a command line interface. Keep responses concise. Use GitHub-flavored markdown.\n- Output text to communicate with the user; all text you output outside of tool use is displayed to the user.\n- Prefer bullet lists over long paragraphs when enumerating steps.\n- Never invent file paths or commands; derive them from context.\n\n# Safety\n- Decline requests for offensive, dangerous, or clearly malicious actions.\n- Provide defensive security guidance only.\n\n# Tool Use Principles\n- Select the minimal set of tools needed to progress.\n- Show intent before large operations.\n- Do not leak secrets or API keys.\n\n# Markdown Style\n- Use fenced code blocks with explicit language when showing code.\n- Avoid trailing whitespace.\n\n# Output Limits\n- Stay focused on the user's query; avoid digressions.\n\n# Final Notes\n- If uncertain, ask a concise clarifying question.\n- If a task is complete, summarize what changed before stopping.",
+          "cache_control": { "type": "ephemeral" }
+        }
+      ],
+      "tools": [
+        {
+          "name": "Glob",
+          "description": "Fast file pattern matching tool for finding files.",
+          "input_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "pattern": {
+                "type": "string",
+                "description": "Glob pattern to match"
+              }
+            },
+            "required": ["pattern"],
+            "additionalProperties": false
+          }
+        },
+        {
+          "name": "Grep",
+          "description": "Fast regex search across repository files.",
+          "input_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "pattern": { "type": "string", "description": "Regex pattern to search" },
+              "include": { "type": "string", "description": "Glob of files to include" }
+            },
+            "required": ["pattern"],
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "timestamp": 1760247066.5122993
+  },
+  "response": {
+    "status_code": 401,
+    "headers": {},
+    "content": {
+      "type": "error",
+      "error": {
+        "type": "authentication_error",
+        "message": "invalid x-api-key"
+      },
+      "request_id": "req_011CU2knSabXdVmGRtTZ1XJy"
+    },
+    "timestamp": 1760247066.8184214
+  },
+  "duration_ms": 306.12
+}

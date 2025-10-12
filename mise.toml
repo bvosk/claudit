@@ -16,6 +16,10 @@ run = "docker-compose up"
 description = "Run inside docker container with build"
 run = "docker-compose up --build"
 
+[tasks.typecheck]
+description = "Typecheck code with basedpyright"
+run = "uv run basedpyright"
+
 [tasks.test]
 description = "Run tests (excluding slow tests)"
 run = "uv run pytest -m \"not slow\""

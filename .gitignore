@@ -4,3 +4,6 @@ __pycache__/
 .claude-trace
 .idea/
 **/.DS_Store
+**/*.local.*
+.mise-cache/
+.uv-cache/

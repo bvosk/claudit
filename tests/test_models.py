@@ -1,8 +1,10 @@
 import pytest
+
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
+from typing import Any, cast
 
-from models import (
+from claudit.models import (
     ProxyConfig,
     CaptureConfig,
     CapturedRequest,
@@ -300,23 +302,15 @@ def test_captured_request_invalid_status():
 
 def test_prompt_valid_minimal():
     """Test valid Prompt with minimal required fields"""
-    system_msgs = [{"type": "text", "text": "You are a helpful assistant."}]
-    timestamp = datetime.now(timezone.utc)
+    prompt = Prompt(system=["You are a helpful assistant."])
 
-    prompt = Prompt(
-        system=system_msgs,
-        timestamp=timestamp,
-    )
-
-    assert prompt.system == system_msgs
+    assert prompt.system == ["You are a helpful assistant."]
     assert prompt.tools == []  # Default empty list
-    assert prompt.timestamp == timestamp
-    assert prompt.metadata == {}  # Default empty dict
 
 
 def test_prompt_valid_with_tools():
     """Test valid Prompt with system messages and tools"""
-    system_msgs = [{"type": "text", "text": "You are a helpful assistant."}]
+    system_msgs = ["You are a helpful assistant."]
     tools = [
         {
             "name": "get_weather",
@@ -327,146 +321,73 @@ def test_prompt_valid_with_tools():
             },
         }
     ]
-    timestamp = datetime.now(timezone.utc)
-    metadata = {"source": "test", "version": "1.0"}
-
-    prompt = Prompt(
-        system=system_msgs,
-        tools=tools,
-        timestamp=timestamp,
-        metadata=metadata,
-    )
+    prompt = Prompt(system=system_msgs, tools=tools)
 
     assert prompt.system == system_msgs
     assert prompt.tools == tools
-    assert prompt.timestamp == timestamp
-    assert prompt.metadata == metadata
 
 
 def test_prompt_invalid_system_not_list():
     """Test Prompt with invalid system (not a list)"""
     with pytest.raises(ValidationError, match="system must be a list"):
-        Prompt(
-            system="not a list",
-            timestamp=datetime.now(timezone.utc),
-        )
+        Prompt(system=cast(Any, "not a list"))
 
 
 def test_prompt_invalid_tools_not_list():
     """Test Prompt with invalid tools (not a list)"""
     with pytest.raises(ValidationError, match="tools must be a list"):
-        Prompt(
-            system=[{"type": "text", "text": "Hello"}],
-            tools="not a list",
-            timestamp=datetime.now(timezone.utc),
-        )
+        Prompt(system=["Hello"], tools=cast(Any, "not a list"))
 
 
-def test_prompt_invalid_timestamp():
-    """Test Prompt with invalid timestamp (not datetime)"""
-    with pytest.raises(ValidationError, match="timestamp must be datetime"):
-        Prompt(
-            system=[{"type": "text", "text": "Hello"}],
-            timestamp="not a datetime",
-        )
-
-
-def test_prompt_invalid_system_message_not_dict():
-    """Test Prompt with system message that's not a dictionary"""
-    with pytest.raises(ValidationError, match="system\\[0\\] must be a dictionary"):
-        Prompt(
-            system=["not a dict"],
-            timestamp=datetime.now(timezone.utc),
-        )
-
-
-def test_prompt_invalid_system_message_missing_type():
-    """Test Prompt with system message missing 'type' field"""
-    with pytest.raises(
-        ValidationError, match="system\\[0\\] must have 'type' and 'text' fields"
-    ):
-        Prompt(
-            system=[{"text": "Hello, missing type"}],
-            timestamp=datetime.now(timezone.utc),
-        )
-
-
-def test_prompt_invalid_system_message_missing_text():
-    """Test Prompt with system message missing 'text' field"""
-    with pytest.raises(
-        ValidationError, match="system\\[0\\] must have 'type' and 'text' fields"
-    ):
-        Prompt(
-            system=[{"type": "text"}],  # Missing 'text'
-            timestamp=datetime.now(timezone.utc),
-        )
-
-
-def test_prompt_invalid_tool_not_dict():
-    """Test Prompt with tool that's not a dictionary"""
-    with pytest.raises(ValidationError, match="tools\\[0\\] must be a dictionary"):
-        Prompt(
-            system=[{"type": "text", "text": "Hello"}],
-            tools=["not a dict"],
-            timestamp=datetime.now(timezone.utc),
-        )
-
-
-def test_prompt_invalid_tool_missing_name():
-    """Test Prompt with tool missing 'name' field"""
-    with pytest.raises(ValidationError, match="tools\\[0\\] must have 'name' field"):
-        Prompt(
-            system=[{"type": "text", "text": "Hello"}],
-            tools=[{"description": "A tool without name"}],
-            timestamp=datetime.now(timezone.utc),
-        )
+def test_prompt_invalid_system_message_not_string():
+    """Test Prompt with system message that's not a string"""
+    with pytest.raises(ValidationError, match=r"system\[0] must be a string"):
+        Prompt(system=cast(Any, [123]))
 
 
 def test_prompt_multiple_system_messages():
-    """Test Prompt with multiple valid system messages"""
+    """Test Prompt with multiple system messages"""
     system_msgs = [
-        {"type": "text", "text": "You are a helpful assistant."},
-        {"type": "text", "text": "Please be concise in your responses."},
+        "You are a helpful assistant.",
+        "Please be concise in your responses.",
     ]
 
-    prompt = Prompt(
-        system=system_msgs,
-        timestamp=datetime.now(timezone.utc),
-    )
+    prompt = Prompt(system=system_msgs)
 
     assert len(prompt.system) == 2
     assert prompt.system == system_msgs
 
 
 def test_prompt_multiple_tools():
-    """Test Prompt with multiple valid tools"""
+    """Test Prompt with multiple tools of varying shapes"""
     tools = [
         {"name": "get_weather", "description": "Get weather info"},
         {"name": "calculate", "description": "Perform calculations"},
         {"name": "search", "description": "Search the internet"},
+        ["list", "tool"],
+        "string tool",
     ]
 
-    prompt = Prompt(
-        system=[{"type": "text", "text": "Hello"}],
-        tools=tools,
-        timestamp=datetime.now(timezone.utc),
-    )
+    prompt = Prompt(system=["Hello"], tools=tools)
 
-    assert len(prompt.tools) == 3
+    assert len(prompt.tools) == len(tools)
     assert prompt.tools == tools
+
+
+def test_prompt_validate_roundtrip():
+    """Calling validate should re-run the same checks without error."""
+    prompt = Prompt(system=["Hello"], tools=["tool"])
+    prompt.validate()
 
 
 def test_prompt_validate_method():
     """Test explicit validate() method"""
-    prompt = Prompt(
-        system=[{"type": "text", "text": "Hello"}],
-        timestamp=datetime.now(timezone.utc),
-    )
+    prompt = Prompt(system=["Hello"])
 
     # Should not raise exception
     prompt.validate()
 
     # Manually corrupt data and test validation fails
-    prompt.system = "corrupted"
+    setattr(prompt, "system", cast(Any, "corrupted"))
     with pytest.raises(ValidationError):
         prompt.validate()

@@ -1,12 +1,15 @@
 # System Prompt
-
+{% if system %}
 {% for prompt in system %}
 {% if prompt.type == 'text' %}
 ```
 {{ prompt.text }}
 ```
 {% endif %}
-{% endfor %}
+{% endfor -%}
+{% else %}
+No system prompts captured.
+{% endif %}
 
 # Tools
 

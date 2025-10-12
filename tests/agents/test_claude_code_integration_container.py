@@ -3,17 +3,20 @@ import tempfile
 import pytest
 from pathlib import Path
 
+from claudit.agents.claude_code import ClaudeCodeStrategy
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize("claude_code_version", ["2.0.10"])
-def test_generates_markdown(claude_code_version, snapshot):
+def test_claude_code_integration_container(claude_code_version, snapshot):
     with tempfile.TemporaryDirectory() as temp_dir:
         test_output_dir = Path(temp_dir) / "test_outputs"
         test_output_dir.mkdir()
 
         run_in_container(test_output_dir, claude_code_version)
 
-        markdown_file = test_output_dir / "claudecode.md"
+        expected_filename = f"{ClaudeCodeStrategy().name}.md"
+        markdown_file = test_output_dir / expected_filename
         assert (
             markdown_file.exists()
         ), f"Expected markdown file not found at {markdown_file}"

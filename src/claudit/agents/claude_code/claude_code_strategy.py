@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+import json
+import re
+import copy
+from datetime import datetime
+from typing import Any, Dict, List, Sequence
+
+from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
+from claudit.models import Prompt
+
+
+class ClaudeCodeStrategy(AgentStrategy):
+    """Agent strategy encapsulating current Claude Code CLI behaviour."""
+
+    name = "claudecode"
+
+    _TOOLS_BLOCK_PATTERN = re.compile(
+        r"^You can use the following tools.*?:", re.MULTILINE
+    )
+
+    def command(self) -> CommandSpec:
+        return CommandSpec(
+            command="claude -p hello --model haiku",
+            use_shell=True,
+            timeout_seconds=15.0,
+        )
+
+    def version_command(self) -> CommandSpec | None:
+        return CommandSpec(
+            command="claude -v",
+            use_shell=True,
+            timeout_seconds=5.0,
+        )
+
+    def environment_overrides(self, proxy_port: int) -> Dict[str, str]:
+        return {
+            "ANTHROPIC_BASE_URL": f"http://localhost:{proxy_port}",
+            "ANTHROPIC_API_KEY": "DUMMY",
+        }
+
+    def api_hosts(self) -> Sequence[str]:
+        return ("api.anthropic.com",)
+
+    def api_path_prefixes(self) -> Sequence[str]:
+        return ("/v1/messages",)
+
+    def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
+        if not captured_data:
+            raise ValueError("No captured data provided")
+
+        capture = captured_data[0]
+        request_data = capture.get("request", {})
+
+        request_content = request_data.get("content", {})
+        if isinstance(request_content, str):
+            try:
+                request_content = json.loads(request_content)
+            except json.JSONDecodeError:
+                request_content = {}
+
+        if not isinstance(request_content, dict):
+            raise ValueError("Request content is not valid JSON")
+
+        raw_system = request_content.get("system", [])
+        if not isinstance(raw_system, list):
+            raw_system = [raw_system] if raw_system else []
+
+        system_prompts: List[str] = []
+        for item in raw_system:
+            if isinstance(item, str):
+                system_prompts.append(item)
+            elif isinstance(item, dict):
+                text_value = item.get("text")
+                if isinstance(text_value, str):
+                    system_prompts.append(text_value)
+                else:
+                    system_prompts.append(json.dumps(item))
+            else:
+                system_prompts.append(str(item))
+
+        tools = request_content.get("tools", [])
+        if not isinstance(tools, list):
+            tools = []
+
+        return Prompt(system=system_prompts, tools=tools)
+
+    def scrub_prompt(self, prompt: Prompt) -> Prompt:
+        """Agent-specific prompt scrubbing for Claude Code."""
+        return Prompt(
+            system=[self._scrub_text_content(s) for s in prompt.system],
+            tools=[self._scrub_value(t) for t in prompt.tools],
+        )
+
+    def _scrub_value(self, data: Any) -> Any:
+        if isinstance(data, str):
+            return self._scrub_text_content(data)
+        if isinstance(data, dict):
+            return {k: self._scrub_value(v) for k, v in data.items()}
+        if isinstance(data, list):
+            return [self._scrub_value(i) for i in data]
+        return copy.deepcopy(data)
+
+    def _scrub_text_content(self, text: str) -> str:
+        if not text:
+            return text
+        today = datetime.now().strftime("%Y-%m-%d")
+        if today:
+            return text.replace(f"Today's date: {today}", "Today's date: [date]")
+        return text
