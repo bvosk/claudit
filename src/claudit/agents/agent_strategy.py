@@ -52,10 +52,6 @@ class AgentStrategy(Protocol):
         """Path prefixes that further scope qualifying traffic."""
         ...
 
-    def scrub_cli_output(self, text: str) -> str:
-        """Apply any CLI stdout/stderr scrubbing required for snapshot stability."""
-        ...
-
     def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
         """Convert captured HTTP payloads into a domain Prompt object."""
         ...

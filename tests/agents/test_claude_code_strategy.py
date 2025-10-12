@@ -31,41 +31,6 @@ class TestClaudeCodeStrategyCommand:
         assert overrides["ANTHROPIC_API_KEY"] == "DUMMY"
 
 
-class TestClaudeCodeStrategyScrubbing:
-    def setup_method(self):
-        self.strategy = ClaudeCodeStrategy()
-
-    def test_scrubs_dynamic_tooling_block_with_trailing_blank(self):
-        text = (
-            "Intro line\n"
-            "You can use the following tools:\n"
-            "- file_browser\n"
-            "- terminal\n"
-            "\n"
-            "Rest of instructions\n"
-        )
-
-        cleaned = self.strategy.scrub_cli_output(text)
-
-        assert cleaned == "Intro line\nRest of instructions\n"
-
-    def test_returns_original_text_when_no_tooling_block_present(self):
-        text = "Intro line\nHelpful instructions\n"
-
-        cleaned = self.strategy.scrub_cli_output(text)
-
-        assert cleaned == text
-
-    def test_scrubs_to_end_when_no_blank_line_terminator_found(self):
-        text = (
-            "Intro line\n" "You can use the following tools:\n" "- github\n" "- shell\n"
-        )
-
-        cleaned = self.strategy.scrub_cli_output(text)
-
-        assert cleaned == "Intro line\n"
-
-
 class TestClaudeCodeStrategyPromptExtraction:
     def setup_method(self):
         self.strategy = ClaudeCodeStrategy()

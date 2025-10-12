@@ -28,9 +28,6 @@ class _FakeStrategy:
     def api_path_prefixes(self):
         return ()
 
-    def scrub_cli_output(self, text: str) -> str:
-        return text
-
     def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
         self.received.append(captured_data)
         return self.prompt

@@ -85,15 +85,11 @@ class AgentCommandRunner:
             shell=command_spec.use_shell,
         )
 
-        raw_stdout = subprocess_result.stdout or ""
-        raw_stderr = subprocess_result.stderr or ""
-        cleaned_stdout = self.strategy.scrub_cli_output(raw_stdout)
-        cleaned_stderr = self.strategy.scrub_cli_output(raw_stderr)
         payload = {
             "success": subprocess_result.returncode == 0,
             "returncode": subprocess_result.returncode,
-            "stdout": cleaned_stdout,
-            "stderr": cleaned_stderr,
+            "stdout": subprocess_result.stdout or "",
+            "stderr": subprocess_result.stderr or "",
             "command": cmd,
         }
         self.last_result = payload

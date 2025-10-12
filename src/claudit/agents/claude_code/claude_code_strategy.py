@@ -45,22 +45,6 @@ class ClaudeCodeStrategy(AgentStrategy):
     def api_path_prefixes(self) -> Sequence[str]:
         return ("/v1/messages",)
 
-    def scrub_cli_output(self, text: str) -> str:
-        if not text:
-            return text
-
-        match = self._TOOLS_BLOCK_PATTERN.search(text)
-        if not match:
-            return text
-
-        start = match.start()
-        remainder = text[start:]
-        split_index = remainder.find("\n\n")
-        if split_index == -1:
-            return text[:start].rstrip() + "\n"
-        cleaned = text[:start] + remainder[split_index + 2 :]
-        return cleaned.lstrip("\n")
-
     def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
         if not captured_data:
             raise ValueError("No captured data provided")

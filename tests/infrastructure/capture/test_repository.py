@@ -36,9 +36,6 @@ class _StubStrategy(AgentStrategy):
     def api_path_prefixes(self) -> Sequence[str]:
         return self._prefixes
 
-    def scrub_cli_output(self, text: str) -> str:
-        return text
-
     def extract_prompt(self, captured_data: List[Dict[str, Any]]):
         raise NotImplementedError
 
