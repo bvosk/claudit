@@ -8,7 +8,7 @@ from claudit.agents.claude_code import ClaudeCodeStrategy
 
 @pytest.mark.slow
 @pytest.mark.parametrize("claude_code_version", ["2.0.10"])
-def test_generates_markdown(claude_code_version, snapshot):
+def test_claude_code_integration_container(claude_code_version, snapshot):
     with tempfile.TemporaryDirectory() as temp_dir:
         test_output_dir = Path(temp_dir) / "test_outputs"
         test_output_dir.mkdir()

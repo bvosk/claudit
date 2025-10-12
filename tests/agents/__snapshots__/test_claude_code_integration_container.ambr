@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_generates_markdown[2.0.10][claude_prompt]
+# name: test_claude_code_integration_container[2.0.10][claude_prompt]
   '''
   # System Prompt
   
