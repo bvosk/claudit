@@ -448,7 +448,7 @@ class Prompt:
     """
 
     system: List[str] = field(default_factory=list)
-    tools: List[Any] = field(default_factory=list)
+    tools: List[Dict[str, Any]] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not isinstance(self.system, list):
