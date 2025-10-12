@@ -153,6 +153,11 @@ src/
 - **App composition**: `app.py` now instantiates `ClaudeCodeStrategy` once, wiring it through `MitmproxyCapture`, the new extractor, formatter, scrubber, and writer to emit prompts as `<strategy.name>.md`.
 - **Test coverage**: Introduced domain-level tests for extractor/writer behavior and broadened strategy prompt extraction cases to mirror the legacy `AgentClient` assertions.
 
+## Step 4 Progress – Command Execution
+- **Infrastructure runner**: Replaced the legacy `AgentClient` with `AgentCommandRunner` in `claudit.infrastructure.agent_command_runner`, centralizing strategy-driven CLI invocation behind the infrastructure layer.
+- **Proxy orchestration integration**: `MitmproxyCapture` now composes the new runner via `self.command_runner`, preserving logging/telemetry while aligning with the refactored architecture.
+- **Test relocation**: Moved the command execution unit tests to `tests/infrastructure/test_command_runner.py`, keeping coverage on preflight/version handling and main command execution through patched `subprocess.run`.
+
 ## Supplemental Progress – Package Layout
 - **Namespaced layout**: Re-homed runtime modules under `src/claudit/` and added a minimal `claudit.__init__` so imports are consistent (`claudit.claude_client`, etc.) across environments.
 - **Import cleanup**: Switched the codebase to absolute `claudit.*` imports and removed the earlier stop-gap relative/try-import logic. Tests now import via the package and `tests/conftest.py` prepends the repo’s `src` directory for local runs.

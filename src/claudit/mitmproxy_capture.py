@@ -6,10 +6,10 @@ from typing import Dict, List, Optional
 from mitmproxy import options
 from mitmproxy.tools.dump import DumpMaster
 
-from claudit.agent_client import AgentClient
 from claudit.agents.base import AgentStrategy
 from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.capture_addon import CaptureAddon
+from claudit.infrastructure.agent_command_runner import AgentCommandRunner
 
 
 class MitmproxyCapture:
@@ -35,7 +35,9 @@ class MitmproxyCapture:
             api_hosts=self.strategy.api_hosts(),
             api_path_prefixes=self.strategy.api_path_prefixes(),
         )
-        self.agent_client = AgentClient(self.proxy_port, strategy=self.strategy)
+        self.command_runner = AgentCommandRunner(
+            self.proxy_port, strategy=self.strategy
+        )
         # Introspection only; not used for control flow
         self.last_agent_result: Dict | None = None
 
@@ -164,10 +166,10 @@ class MitmproxyCapture:
 
     def _run_agent_and_store(self):
         """
-        Invoke the agent CLI via the AgentClient while proxy is active.
+        Invoke the agent CLI via the AgentCommandRunner while proxy is active.
         """
         self.logger.info("Invoking agent CLI through proxy (port=%d)", self.proxy_port)
-        result = self.agent_client.run_agent_command()
+        result = self.command_runner.run()
         self.last_agent_result = result
         snippet = (result.get("stderr") or result.get("stdout") or "")[:160].replace(
             "\n", " "

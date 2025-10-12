@@ -7,7 +7,9 @@ from claudit.agents.base import AgentStrategy, CommandSpec
 from claudit.agents.claude_code import ClaudeCodeStrategy
 
 
-class AgentClient:
+class AgentCommandRunner:
+    """Invoke agent-specific CLI commands using strategy-provided settings."""
+
     def __init__(
         self,
         proxy_port: int = 8080,
@@ -55,10 +57,10 @@ class AgentClient:
         else:
             self.logger.warning("Failed to get agent tool version")
 
-    def run_agent_command(self) -> Dict[str, Any]:
+    def run(self) -> Dict[str, Any]:
+        """Execute the strategy-provided command and return sanitized results."""
         self.logger.info("Preparing to invoke agent command")
 
-        # Build & log environment
         env = self._build_base_env()
 
         command_spec: CommandSpec = self.strategy.command()
@@ -69,10 +71,8 @@ class AgentClient:
             command_spec.timeout_seconds,
         )
 
-        # Run preflight diagnostics (non-fatal)
         self._run_preflight(env)
 
-        # Main command (unchanged core behavior)
         cmd = command_spec.command
         self.logger.info("Starting agent command: %s", cmd)
 
@@ -85,7 +85,6 @@ class AgentClient:
             shell=command_spec.use_shell,
         )
 
-        # Preserve original output contract
         raw_stdout = subprocess_result.stdout or ""
         raw_stderr = subprocess_result.stderr or ""
         cleaned_stdout = self.strategy.scrub_cli_output(raw_stdout)
