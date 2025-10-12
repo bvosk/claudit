@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import copy
+from datetime import datetime
 from typing import Any, Dict, List, Sequence
 
 from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
@@ -98,3 +100,27 @@ class ClaudeCodeStrategy(AgentStrategy):
             tools = []
 
         return Prompt(system=system_prompts, tools=tools)
+
+    def scrub_prompt(self, prompt: Prompt) -> Prompt:
+        """Agent-specific prompt scrubbing for Claude Code."""
+        return Prompt(
+            system=[self._scrub_text_content(s) for s in prompt.system],
+            tools=[self._scrub_value(t) for t in prompt.tools],
+        )
+
+    def _scrub_value(self, data: Any) -> Any:
+        if isinstance(data, str):
+            return self._scrub_text_content(data)
+        if isinstance(data, dict):
+            return {k: self._scrub_value(v) for k, v in data.items()}
+        if isinstance(data, list):
+            return [self._scrub_value(i) for i in data]
+        return copy.deepcopy(data)
+
+    def _scrub_text_content(self, text: str) -> str:
+        if not text:
+            return text
+        today = datetime.now().strftime("%Y-%m-%d")
+        if today:
+            return text.replace(f"Today's date: {today}", "Today's date: [date]")
+        return text

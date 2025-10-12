@@ -59,3 +59,11 @@ class AgentStrategy(Protocol):
     def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
         """Convert captured HTTP payloads into a domain Prompt object."""
         ...
+
+    def scrub_prompt(self, prompt: Prompt) -> Prompt:
+        """
+        Apply any agent-specific prompt scrubbing (e.g. redacting dynamic or
+        non-deterministic content) prior to rendering or snapshotting.
+        Implementations may return the prompt unchanged if no scrubbing is needed.
+        """
+        ...

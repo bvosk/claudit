@@ -100,7 +100,10 @@ class CaptureService:
 
         if captures:
             prompt = self._prompt_extractor.extract(captures)
-            scrubbed_prompt = self._content_scrubber(prompt)
+            if hasattr(self.strategy, "scrub_prompt") and callable(getattr(self.strategy, "scrub_prompt")):  # type: ignore[attr-defined]
+                scrubbed_prompt = self.strategy.scrub_prompt(prompt)  # type: ignore[attr-defined]
+            else:
+                scrubbed_prompt = self._content_scrubber(prompt)
             markdown_content = self._prompt_renderer(scrubbed_prompt)
             markdown_path = self._prompt_writer.write(markdown_content)
             self._logger.info("Prompt written to %s", markdown_path)

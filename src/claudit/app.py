@@ -10,7 +10,7 @@ from contextlib import redirect_stdout, redirect_stderr
 
 from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.application.capture_service import CaptureService
-from claudit.claude_content_scrubber import ClaudeContentScrubber
+
 from claudit.prompt_formatter import render_prompt_markdown
 
 
@@ -67,7 +67,7 @@ async def async_main():
     with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
         workflow_service = CaptureService.build(
             strategy=strategy,
-            content_scrubber=ClaudeContentScrubber.scrub,
+            content_scrubber=lambda p: p,
             prompt_renderer=render_prompt_markdown,
         )
         result = await workflow_service.run()
