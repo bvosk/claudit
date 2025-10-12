@@ -2,8 +2,9 @@
 
 import subprocess
 from unittest.mock import patch
+from typing import Any, Dict, List
 
-from claudit.agents.base import CommandSpec
+from claudit.agents.agent_strategy import CommandSpec
 from claudit.infrastructure.agent_command_runner import AgentCommandRunner
 
 
@@ -34,6 +35,9 @@ class _DummyStrategy:
 
     def scrub_cli_output(self, text: str) -> str:
         return text
+
+    def extract_prompt(self, captured_data: List[Dict[str, Any]]):
+        raise NotImplementedError
 
 
 class TestAgentCommandRunner:

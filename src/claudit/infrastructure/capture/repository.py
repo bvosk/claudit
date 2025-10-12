@@ -5,7 +5,7 @@ from typing import Dict, List, Protocol, Sequence
 
 from mitmproxy import http
 
-from claudit.agents.base import AgentStrategy
+from claudit.agents.agent_strategy import AgentStrategy
 
 
 class CaptureSink(Protocol):

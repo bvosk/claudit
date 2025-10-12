@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Sequence, cast
 
 from mitmproxy import http
 
-from claudit.agents.base import AgentStrategy, CommandSpec
+from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
 from claudit.infrastructure.capture.repository import CaptureRepository
 from claudit.infrastructure.capture.sinks.in_memory import InMemoryCaptureSink
 

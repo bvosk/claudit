@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
-from claudit.agents.base import AgentStrategy
+from claudit.agents.agent_strategy import AgentStrategy
 from claudit.capture_addon import CaptureAddon
 from claudit.domain.prompts import PromptExtractor, PromptWriter
 from claudit.infrastructure.agent_command_runner import AgentCommandRunner
@@ -75,7 +75,9 @@ class CaptureService:
     async def run(self) -> CaptureWorkflowResult:
         """Execute the capture workflow and return aggregate results."""
         self._repository.reset()
-        self._logger.info("Starting capture workflow for strategy '%s'", self.strategy.name)
+        self._logger.info(
+            "Starting capture workflow for strategy '%s'", self.strategy.name
+        )
 
         loop = asyncio.get_running_loop()
 

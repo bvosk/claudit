@@ -3,7 +3,7 @@ import os
 import subprocess
 from typing import Any, Dict
 
-from claudit.agents.base import AgentStrategy, CommandSpec
+from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
 from claudit.agents.claude_code import ClaudeCodeStrategy
 
 

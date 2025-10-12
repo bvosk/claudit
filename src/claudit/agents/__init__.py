@@ -1,3 +1,3 @@
-from .base import AgentStrategy, CommandSpec
+from .agent_strategy import AgentStrategy, CommandSpec
 
 __all__ = ["AgentStrategy", "CommandSpec"]

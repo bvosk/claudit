@@ -4,7 +4,7 @@ import json
 import re
 from typing import Any, Dict, List, Sequence
 
-from claudit.agents.base import AgentStrategy, CommandSpec
+from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
 from claudit.models import Prompt
 
 

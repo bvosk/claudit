@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from claudit.agents.base import AgentStrategy
+from claudit.agents.agent_strategy import AgentStrategy
 from claudit.models import Prompt
 
 
