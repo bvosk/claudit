@@ -14,8 +14,16 @@ from claudit.models import Prompt
 class _StubStrategy:
     name = "stub"
 
+    def __init__(self, scrubbed: Prompt, scrub_calls: List[Prompt]):
+        self._scrubbed = scrubbed
+        self.scrub_calls = scrub_calls
+
     def command(self):
         raise NotImplementedError("Should not be called in tests")
+
+    def scrub_prompt(self, prompt: Prompt) -> Prompt:
+        self.scrub_calls.append(prompt)
+        return self._scrubbed
 
 
 class _StubRepository:
@@ -97,10 +105,6 @@ async def test_run_generates_markdown_when_captures_present():
 
     scrub_calls: List[Prompt] = []
 
-    def scrubber(data: Prompt) -> Prompt:
-        scrub_calls.append(data)
-        return scrubbed_prompt
-
     markdown_calls: List[Prompt] = []
 
     def renderer(data: Prompt) -> str:
@@ -108,7 +112,7 @@ async def test_run_generates_markdown_when_captures_present():
         return "# prompt"
 
     writer = _StubWriter(Path("/tmp/output.md"))
-    strategy = _StubStrategy()
+    strategy = _StubStrategy(scrubbed_prompt, scrub_calls)
     addon = object()
 
     def populate_capture():
@@ -116,6 +120,7 @@ async def test_run_generates_markdown_when_captures_present():
 
     runner.on_enter = populate_capture
 
+    # content_scrubber parameter is now legacy in CaptureService; pass a passthrough
     service = CaptureService(
         strategy=strategy,
         runner=runner,
@@ -124,7 +129,7 @@ async def test_run_generates_markdown_when_captures_present():
         capture_addon=addon,
         prompt_extractor=extractor,
         prompt_writer=writer,
-        content_scrubber=scrubber,
+        content_scrubber=lambda p: p,
         prompt_renderer=renderer,
     )
 
@@ -161,9 +166,6 @@ async def test_run_skips_prompt_when_no_captures():
 
     extractor = _SpyExtractor()
 
-    def scrubber(prompt: Prompt) -> Prompt:
-        pytest.fail("scrubber should not be called when there are no captures")
-
     def renderer(prompt: Prompt) -> str:
         pytest.fail("renderer should not be called when there are no captures")
 
@@ -172,7 +174,8 @@ async def test_run_skips_prompt_when_no_captures():
             pytest.fail("writer should not be invoked when there are no captures")
 
     writer = _SpyWriter(Path("/tmp/output.md"))
-    strategy = _StubStrategy()
+    scrub_calls: List[Prompt] = []
+    strategy = _StubStrategy(Prompt(system=[]), scrub_calls)
 
     service = CaptureService(
         strategy=strategy,
@@ -182,7 +185,7 @@ async def test_run_skips_prompt_when_no_captures():
         capture_addon=object(),
         prompt_extractor=extractor,
         prompt_writer=writer,
-        content_scrubber=scrubber,
+        content_scrubber=lambda p: p,
         prompt_renderer=renderer,
     )
 
@@ -191,6 +194,7 @@ async def test_run_skips_prompt_when_no_captures():
     assert repository.reset_calls == 1
     assert command_runner.calls == 1
     assert extractor.called is False
+    assert scrub_calls == []  # scrub should not be invoked
     assert result.markdown_path is None
     assert result.markdown_content is None
     assert result.capture_count == 0
