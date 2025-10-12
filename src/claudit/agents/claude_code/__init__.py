@@ -1,3 +1,3 @@
-from .strategy import ClaudeCodeStrategy
+from .claude_code_strategy import ClaudeCodeStrategy
 
 __all__ = ["ClaudeCodeStrategy"]

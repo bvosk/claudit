@@ -60,10 +60,7 @@ class TestClaudeCodeStrategyScrubbing:
 
     def test_scrubs_to_end_when_no_blank_line_terminator_found(self):
         text = (
-            "Intro line\n"
-            "You can use the following tools:\n"
-            "- github\n"
-            "- shell\n"
+            "Intro line\n" "You can use the following tools:\n" "- github\n" "- shell\n"
         )
 
         cleaned = self.strategy.scrub_cli_output(text)
@@ -95,7 +92,7 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         prompt = self.strategy.extract_prompt(captured_data)
 
-        assert prompt.metadata["source"] == "claude_code"
+        assert prompt.metadata["source"] == self.strategy.name
         assert prompt.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
 
     def test_extract_prompt_accepts_json_string_payload(self):
@@ -123,7 +120,9 @@ class TestClaudeCodeStrategyPromptExtraction:
         strategy = ClaudeCodeStrategy()
         fake_now = datetime(2025, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
 
-        with patch("claudit.agents.claude_code.strategy.datetime") as mock_dt:
+        with patch(
+            "claudit.agents.claude_code.claude_code_strategy.datetime"
+        ) as mock_dt:
             mock_dt.now.return_value = fake_now
             mock_dt.fromisoformat = datetime.fromisoformat
 
@@ -151,3 +150,72 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         with pytest.raises(ValueError, match="Request content is not valid JSON"):
             strategy.extract_prompt(captured_data)
+
+    def test_extract_prompt_handles_malformed_json_string(self):
+        captured_data = [
+            {
+                "id": 1,
+                "timestamp": "2025-01-01T12:00:00Z",
+                "request": {"content": "{invalid json"},
+            }
+        ]
+
+        prompt = self.strategy.extract_prompt(captured_data)
+
+        assert prompt.system == []
+        assert prompt.tools == []
+
+    def test_extract_prompt_defaults_missing_system_and_tools(self):
+        captured_data = [
+            {
+                "id": 1,
+                "request": {"content": {"other": "value"}},
+            }
+        ]
+
+        prompt = self.strategy.extract_prompt(captured_data)
+
+        assert prompt.system == []
+        assert prompt.tools == []
+
+    def test_extract_prompt_populates_metadata_fields(self):
+        captured_data = [
+            {
+                "id": 42,
+                "request": {
+                    "method": "POST",
+                    "url": "https://api.anthropic.com/v1/messages",
+                    "content": {"system": []},
+                },
+            }
+        ]
+
+        prompt = self.strategy.extract_prompt(captured_data)
+
+        assert prompt.metadata["source"] == self.strategy.name
+        assert prompt.metadata["capture_id"] == 42
+        assert prompt.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
+        assert prompt.metadata["request_method"] == "POST"
+
+    def test_extract_prompt_uses_first_capture(self):
+        captured_data = [
+            {
+                "id": 2,
+                "request": {
+                    "content": {"system": [{"type": "text", "text": "Second"}]}
+                },
+            },
+            {
+                "id": 1,
+                "request": {"content": {"system": [{"type": "text", "text": "First"}]}},
+            },
+        ]
+
+        prompt = self.strategy.extract_prompt(captured_data)
+
+        assert prompt.metadata["capture_id"] == 2
+        assert prompt.system[0]["text"] == "Second"
+
+    def test_extract_prompt_requires_data(self):
+        with pytest.raises(ValueError, match="No captured data provided"):
+            self.strategy.extract_prompt([])

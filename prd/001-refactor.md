@@ -137,18 +137,23 @@ src/
 - **Transport assumptions**: All agents operate over HTTP; no alternate capture mechanisms needed.
 
 ## Step 1 Progress – Baseline Notes
-- **CLI invocation**: `ClaudeClient.run_claude_command` builds env vars `ANTHROPIC_BASE_URL=http://localhost:{port}` and dummy `ANTHROPIC_API_KEY`, runs a non-fatal `claude -v` preflight, then executes the hard-coded `claude -p hello --model haiku` command with `timeout=15s`. Both stdout/stderr are scrubbed with `_scrub_dynamic_tooling_section` to remove the dynamic "You can use the following tools…" block before persisting to `last_result`.
+- **CLI invocation**: `AgentClient.run_agent_command` builds env vars `ANTHROPIC_BASE_URL=http://localhost:{port}` and dummy `ANTHROPIC_API_KEY`, runs a non-fatal `claude -v` preflight, then executes the hard-coded `claude -p hello --model haiku` command with `timeout=15s`. Both stdout/stderr are scrubbed with the strategy’s tooling-block filter before persisting to `last_result`.
 - **Capture persistence**: `CaptureAddon` writes each qualifying flow to `captures/claudecode.json` (overwriting per event) while also appending to in-memory `captured_data`. Responses are filtered to `api.anthropic.com/v1/messages`, timestamps derive from mitmproxy's `timestamp_start`, and sensitive headers (e.g., `x-api-key`) are masked by prefix retention.
-- **Prompt extraction**: `ClaudeClient.extract_prompt` uses the newest capture (`captured_data[0]`), accepts JSON strings or dict payloads, enforces dict content, and lifts `system`/`tools` lists into a `Prompt` dataclass with metadata containing `source='claude_client'`, `capture_id`, request URL, and method. Timestamp parsing tolerates ISO strings with optional `Z` suffix and falls back to `datetime.now(timezone.utc)`.
-- **Runtime workflow**: `app.py` orchestrates the flow—launches `MitmproxyCapture.capture_and_return()`, feeds the result back into `ClaudeClient.extract_prompt`, sanitizes via `ClaudeContentScrubber.scrub_prompt_data`, formats with `render_prompt_markdown`, and writes to `prompts/claudecode.md` (creating the directory if missing). All stdout/stderr during capture is trapped to keep CLI output clean.
+- **Prompt extraction**: `ClaudeCodeStrategy.extract_prompt` uses the newest capture (`captured_data[0]`), accepts JSON strings or dict payloads, enforces dict content, and lifts `system`/`tools` lists into a `Prompt` dataclass with metadata containing `source='claude_code'`, `capture_id`, request URL, and method. Timestamp parsing tolerates ISO strings with optional `Z` suffix and falls back to `datetime.now(timezone.utc)`.
+- **Runtime workflow**: `app.py` orchestrates the flow—launches `MitmproxyCapture.capture_and_return()`, feeds the result into a strategy-backed `PromptExtractor`, sanitizes via `ClaudeContentScrubber.scrub_prompt_data`, formats with `render_prompt_markdown`, and writes to `prompts/claude_code.md` (creating the directory if missing). All stdout/stderr during capture is trapped to keep CLI output clean.
 - **Mitmproxy lifecycle**: `MitmproxyCapture` configures reverse proxy mode targeting `https://api.anthropic.com`, asserts port availability, clears addon state per session, waits for readiness before offloading the Claude CLI to a thread, then triggers `master.shutdown()` and ensures graceful teardown (with timeout + cancel fallback) while sleeping 0.5s to release the socket.
 
 ## Step 2 Progress – Strategy Contracts
 - **Strategy scaffolding**: Added `claudit/agents/base.py` with the `AgentStrategy` protocol and `CommandSpec` dataclass, plus concrete `ClaudeCodeStrategy` under `claudit/agents/claude_code/`. The strategy now owns CLI command, env overrides, tooling scrubber, and prompt extraction logic.
-- **Claude client delegation**: `ClaudeClient` accepts an `AgentStrategy`, defers command/env decisions to it, and simply proxies `extract_prompt` calls. CLI output scrubbing uses the strategy, preserving backward-compatible payloads.
+- **Agent client delegation**: `AgentClient` relies on injected strategies for command/env/timeouts and output scrubbing, leaving prompt parsing entirely within the strategy so higher layers can remain strategy-agnostic.
 - **Safety nets**: Added `tests/agents/test_claude_code_strategy.py` to cover command/env specs, tooling scrub scrubber, and prompt parsing edge cases while existing `ClaudeClient` tests continue to exercise strategy wiring.
 
-## Step 3 Progress – Package Layout
+## Step 3 Progress – Prompt Processing
+- **Prompt domain layer**: Added `PromptExtractor` and `PromptWriter` under `claudit.domain.prompts`, providing strategy-aware extraction and centralized Markdown persistence.
+- **App composition**: `app.py` now instantiates `ClaudeCodeStrategy` once, wiring it through `MitmproxyCapture`, the new extractor, formatter, scrubber, and writer to emit prompts as `<strategy.name>.md`.
+- **Test coverage**: Introduced domain-level tests for extractor/writer behavior and broadened strategy prompt extraction cases to mirror the legacy `AgentClient` assertions.
+
+## Supplemental Progress – Package Layout
 - **Namespaced layout**: Re-homed runtime modules under `src/claudit/` and added a minimal `claudit.__init__` so imports are consistent (`claudit.claude_client`, etc.) across environments.
 - **Import cleanup**: Switched the codebase to absolute `claudit.*` imports and removed the earlier stop-gap relative/try-import logic. Tests now import via the package and `tests/conftest.py` prepends the repo’s `src` directory for local runs.
 - **Packaging config**: Pointed the CLI entry point at `claudit.app:main` and updated Hatch’s wheel target (`packages = ["src/claudit"]`) to ensure the package is bundled for Docker/integration runs.

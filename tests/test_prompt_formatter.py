@@ -32,7 +32,9 @@ class TestRenderPromptMarkdown:
     def test_render_prompt_markdown_success(self, mocker, sample_prompt):
         # Setup mocks
         mock_template_dir = Path("/mock/templates")
-        mock_find_template = mocker.patch("claudit.prompt_formatter._find_template_directory")
+        mock_find_template = mocker.patch(
+            "claudit.prompt_formatter._find_template_directory"
+        )
         mock_find_template.return_value = mock_template_dir
 
         mock_loader = mocker.patch("claudit.prompt_formatter.FileSystemLoader")

@@ -12,7 +12,7 @@ from claudit.models import Prompt
 class ClaudeCodeStrategy(AgentStrategy):
     """Agent strategy encapsulating current Claude Code CLI behaviour."""
 
-    name = "claude_code"
+    name = "claudecode"
 
     _TOOLS_BLOCK_PATTERN = re.compile(
         r"^You can use the following tools.*?:", re.MULTILINE
@@ -101,4 +101,6 @@ class ClaudeCodeStrategy(AgentStrategy):
             "request_method": request_data.get("method", ""),
         }
 
-        return Prompt(system=system_messages, timestamp=timestamp, tools=tools, metadata=metadata)
+        return Prompt(
+            system=system_messages, timestamp=timestamp, tools=tools, metadata=metadata
+        )

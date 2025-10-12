@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
-import sys
-import signal
 import logging
+import signal
 import os
 import asyncio
-from contextlib import redirect_stdout, redirect_stderr
 import io
+import sys
+from contextlib import redirect_stdout, redirect_stderr
 
 from pathlib import Path
 
-from claudit.agent_client import AgentClient
+from claudit.agents.base import AgentStrategy
+from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.claude_content_scrubber import ClaudeContentScrubber
-from claudit.mitm_capture import MitmproxyCapture
+from claudit.domain.prompts import PromptExtractor, PromptWriter
+from claudit.mitmproxy_capture import MitmproxyCapture
 from claudit.prompt_formatter import render_prompt_markdown
+
 
 # Configure centralized logging
 def setup_logging():
@@ -58,13 +61,13 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-async def capture_claude_traffic():
+async def capture_claude_traffic(strategy: AgentStrategy):
     """Capture Claude's HTTP traffic using the working http_only configuration"""
     logger = logging.getLogger(__name__)
 
     try:
         logger.info("Starting HTTP traffic capture")
-        capture = MitmproxyCapture()
+        capture = MitmproxyCapture(strategy=strategy)
         data = await capture.capture_and_return()
         logger.info(f"Captured {len(data)} requests successfully")
         return data
@@ -75,29 +78,27 @@ async def capture_claude_traffic():
 
 
 async def async_main():
+    strategy = ClaudeCodeStrategy()
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     stdout_capture = io.StringIO()
     stderr_capture = io.StringIO()
 
     with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-        captured_data = await capture_claude_traffic()
+        captured_data = await capture_claude_traffic(strategy)
 
     print(f"Captured {len(captured_data)} requests")
 
     if captured_data:
-        agent_client = AgentClient()
-        prompt = agent_client.extract_prompt(captured_data)
+        extractor = PromptExtractor(strategy=strategy)
+        prompt = extractor.extract(captured_data)
 
         clean_prompt = ClaudeContentScrubber.scrub_prompt_data(prompt)
 
         markdown_content = render_prompt_markdown(clean_prompt)
 
-        prompts_dir = Path("prompts")
-        prompts_dir.mkdir(exist_ok=True)
-        output_path = prompts_dir / "claudecode.md"
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(markdown_content)
+        writer = PromptWriter(Path("prompts"), filename=f"{strategy.name}.md")
+        output_path = writer.write(markdown_content)
 
         print(f"Markdown written to {output_path}")
 

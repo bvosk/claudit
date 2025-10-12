@@ -1,11 +1,10 @@
 import logging
 import os
 import subprocess
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from claudit.agents.base import AgentStrategy, CommandSpec
 from claudit.agents.claude_code import ClaudeCodeStrategy
-from claudit.models import Prompt
 
 
 class AgentClient:
@@ -100,7 +99,3 @@ class AgentClient:
         }
         self.last_result = payload
         return payload
-
-    def extract_prompt(self, captured_data: List[Dict[str, Any]]) -> Prompt:
-        """Extract a Prompt via the active agent strategy."""
-        return self.strategy.extract_prompt(captured_data)
