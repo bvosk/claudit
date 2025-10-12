@@ -1,10 +1,6 @@
 import asyncio
 import logging
-import socket
-from typing import Dict, List, Optional
-
-from mitmproxy import options
-from mitmproxy.tools.dump import DumpMaster
+from typing import Dict, List
 
 from claudit.agents.base import AgentStrategy
 from claudit.agents.claude_code import ClaudeCodeStrategy
@@ -12,6 +8,7 @@ from claudit.capture_addon import CaptureAddon
 from claudit.infrastructure.agent_command_runner import AgentCommandRunner
 from claudit.infrastructure.capture import CaptureRepository
 from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
+from claudit.infrastructure.mitmproxy_runner import MitmproxyRunner
 
 
 class MitmproxyCapture:
@@ -31,7 +28,7 @@ class MitmproxyCapture:
         self.setup_logging()
         self.proxy_port = proxy_port
         self.strategy: AgentStrategy = strategy or ClaudeCodeStrategy()
-        self.master: Optional[DumpMaster] = None
+        self.master = None
         self.capture_repository = CaptureRepository(
             strategy=self.strategy,
             sink=JsonFileCaptureSink(
@@ -44,131 +41,13 @@ class MitmproxyCapture:
         self.command_runner = AgentCommandRunner(
             self.proxy_port, strategy=self.strategy
         )
+        self.runner = MitmproxyRunner(proxy_port=self.proxy_port, logger=self.logger)
+        self.runner.add_addon(self.capture_addon)
         # Introspection only; not used for control flow
         self.last_agent_result: Dict | None = None
 
-        self.setup_mitmproxy()
-
-    # --------------------------------------------------------------------- #
-    # Logging setup
-    # --------------------------------------------------------------------- #
-
     def setup_logging(self):
         self.logger = logging.getLogger(__name__)
-
-    # --------------------------------------------------------------------- #
-    # Utility
-    # --------------------------------------------------------------------- #
-
-    def is_port_available(self, port: int, host: str = "localhost") -> bool:
-        """
-        Check if a port is available for binding.
-        """
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.bind((host, port))
-                return True
-        except OSError:
-            return False
-
-    # --------------------------------------------------------------------- #
-    # mitmproxy lifecycle
-    # --------------------------------------------------------------------- #
-
-    def setup_mitmproxy(self):
-        """
-        Configure and initialize mitmproxy DumpMaster with the capture addon
-        in reverse proxy mode. All requests received on the local listener
-        are forwarded upstream to Anthropic while being intercepted.
-        """
-        self.logger.info(
-            f"Configuring mitmproxy in reverse mode (listen_port={self.proxy_port})"
-        )
-        if not self.is_port_available(self.proxy_port):
-            self.logger.error(
-                "Port %d is already in use before mitmproxy startup", self.proxy_port
-            )
-            raise RuntimeError(f"Port {self.proxy_port} is already in use")
-
-        # Enable reverse proxy mode to upstream Anthropic API.
-        # Equivalent CLI: --mode reverse:https://api.anthropic.com
-        opts = options.Options(
-            listen_port=self.proxy_port,
-            confdir="/root/.mitmproxy",
-            mode=["reverse:https://api.anthropic.com"],
-        )
-        self.master = DumpMaster(opts)
-        self.master.addons.add(self.capture_addon)
-        self.logger.debug(
-            "mitmproxy DumpMaster created in reverse mode; capture addon registered"
-        )
-
-    async def start_proxy(self):
-        """
-        Run mitmproxy event loop until shutdown is requested.
-        """
-        try:
-            if not self.master:
-                raise RuntimeError(
-                    "mitmproxy not configured; call setup_mitmproxy() first"
-                )
-            self.logger.info("Starting mitmproxy event loop")
-            await self.master.run()
-            self.logger.debug("mitmproxy event loop exited normally")
-        except Exception as e:
-            self.logger.error(f"Error running mitmproxy: {e}")
-            raise
-
-    async def wait_for_proxy_ready(
-        self, host: str = "localhost", timeout: float = 10.0
-    ):
-        """
-        Poll until the TCP listener accepts connections or timeout elapses.
-        """
-        self.logger.debug("Waiting for mitmproxy listener readiness")
-        loop = asyncio.get_event_loop()
-        start = loop.time()
-        attempts = 0
-        last_err = None
-        while True:
-            try:
-                reader, writer = await asyncio.open_connection(host, self.proxy_port)
-                writer.close()
-                try:
-                    await writer.wait_closed()
-                except Exception:
-                    pass
-                elapsed = loop.time() - start
-                self.logger.info(
-                    "mitmproxy listener ready (port=%d) after %.3fs in %d attempt(s)",
-                    self.proxy_port,
-                    elapsed,
-                    attempts + 1,
-                )
-                return
-            except Exception as e:
-                last_err = e
-                attempts += 1
-                if loop.time() - start > timeout:
-                    self.logger.error(
-                        "mitmproxy not ready after %.1fs (attempts=%d) last_error=%s",
-                        timeout,
-                        attempts,
-                        last_err,
-                    )
-                    raise
-                if attempts % 10 == 0:
-                    self.logger.debug(
-                        "Still waiting for mitmproxy (attempts=%d) last_error=%s",
-                        attempts,
-                        last_err,
-                    )
-                await asyncio.sleep(0.05)
-
-    # --------------------------------------------------------------------- #
-    # Agent invocation
-    # --------------------------------------------------------------------- #
 
     def _run_agent_and_store(self):
         """
@@ -187,10 +66,6 @@ class MitmproxyCapture:
             snippet,
         )
 
-    # --------------------------------------------------------------------- #
-    # Public capture orchestration
-    # --------------------------------------------------------------------- #
-
     async def capture_and_return(self) -> List[Dict]:
         """
         Run a full capture session:
@@ -206,40 +81,18 @@ class MitmproxyCapture:
             self.capture_repository.reset()
             self.logger.debug("Cleared previous captured data buffer")
 
-            # Start mitmproxy concurrently
-            proxy_task = asyncio.create_task(self.start_proxy())
-            await self.wait_for_proxy_ready()
+            try:
+                async with self.runner.running() as master:
+                    self.master = master
+                    # Offload CLI invocation to thread executor to avoid blocking loop
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(None, self._run_agent_and_store)
+            finally:
+                self.master = None
 
-            # Offload CLI invocation to thread executor to avoid blocking loop
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, self._run_agent_and_store)
-
-            # Snapshot captured flows
             captured_data = self.capture_repository.all()
             self.logger.info("Captured %d qualifying request(s)", len(captured_data))
 
-            # Begin graceful shutdown
-            if self.master:
-                self.logger.debug("Initiating mitmproxy shutdown")
-                self.master.shutdown()
-
-            try:
-                await asyncio.wait_for(proxy_task, timeout=5)
-                self.logger.debug("mitmproxy shutdown completed within timeout")
-            except asyncio.TimeoutError:
-                self.logger.warning(
-                    "Proxy shutdown timeout after 5s; forcing task cancellation"
-                )
-                proxy_task.cancel()
-                try:
-                    await proxy_task
-                except asyncio.CancelledError:
-                    pass
-                if self.master:
-                    self.master = None
-
-            # Allow OS to release socket reliably
-            await asyncio.sleep(0.5)
             self.logger.info(
                 "Capture session complete (requests=%d)", len(captured_data)
             )
@@ -247,13 +100,4 @@ class MitmproxyCapture:
 
         except Exception as e:
             self.logger.error("Capture session failed: %s", e)
-            if self.master:
-                try:
-                    self.logger.debug(
-                        "Attempting emergency mitmproxy shutdown after failure"
-                    )
-                    self.master.shutdown()
-                    await asyncio.sleep(1)
-                except Exception:
-                    pass
             raise

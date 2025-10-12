@@ -165,6 +165,13 @@ src/
 - **Safety nets**: Introduced `tests/infrastructure/capture/test_repository.py` to cover host/path filtering, sink persistence, and reset behaviour.
 - **Verification**: `mise test-all` passes following the persistence refactor.
 
+## Step 6 Progress – Proxy Orchestration
+- **Lifecycle runner**: Implemented `MitmproxyRunner` in `claudit.infrastructure.mitmproxy_runner`, providing start/ready/shutdown helpers and an async context manager while preserving port checks and reverse proxy setup.
+- **Capture refactor**: `MitmproxyCapture` now composes the runner, simplifying `capture_and_return` to use `async with runner.running()` and delegating readiness/shutdown details to the infrastructure layer.
+- **Addon registration**: Runner accepts the existing `CaptureAddon`, so addon wiring happens once at construction rather than inside the capture loop.
+- **Testing**: Added `tests/infrastructure/test_mitmproxy_runner.py` with async coverage for readiness success, failure timeout, and forced cancellation paths.
+- **Verification**: Full suite via `mise test-all` still green after the runner integration.
+
 ## Supplemental Progress – Package Layout
 - **Namespaced layout**: Re-homed runtime modules under `src/claudit/` and added a minimal `claudit.__init__` so imports are consistent (`claudit.claude_client`, etc.) across environments.
 - **Import cleanup**: Switched the codebase to absolute `claudit.*` imports and removed the earlier stop-gap relative/try-import logic. Tests now import via the package and `tests/conftest.py` prepends the repo’s `src` directory for local runs.
