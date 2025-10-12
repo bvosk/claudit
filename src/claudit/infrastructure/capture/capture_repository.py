@@ -1,23 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Protocol, Sequence
+from typing import Dict, List, Sequence
 
 from mitmproxy import http
 
 from claudit.agents.agent_strategy import AgentStrategy
-
-
-class CaptureSink(Protocol):
-    """Minimal interface for persisting captured HTTP data."""
-
-    def persist(self, capture: Dict) -> None:
-        """Persist a single capture payload."""
-        ...
-
-    def reset(self) -> None:
-        """Clear any previously persisted state for a new capture session."""
-        ...
+from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
 
 
 class CaptureRepository:
@@ -26,7 +15,7 @@ class CaptureRepository:
     Keeps an in-memory record for callers that need to inspect captured payloads.
     """
 
-    def __init__(self, *, strategy: AgentStrategy, sink: CaptureSink):
+    def __init__(self, *, strategy: AgentStrategy, sink: JsonFileCaptureSink):
         self._logger = logging.getLogger(__name__)
         self._strategy = strategy
         self._sink = sink

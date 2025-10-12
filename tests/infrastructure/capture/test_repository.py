@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
 from typing import Any, Dict, List, Sequence, cast
 
 from mitmproxy import http
 
 from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
-from claudit.infrastructure.capture.repository import CaptureRepository
-from claudit.infrastructure.capture.sinks.in_memory import InMemoryCaptureSink
+from claudit.infrastructure.capture.capture_repository import CaptureRepository
+from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
 
 
 class _StubStrategy(AgentStrategy):
@@ -45,12 +46,12 @@ def _flow(host: str, path: str) -> http.HTTPFlow:
     return cast(http.HTTPFlow, SimpleNamespace(request=request))
 
 
-def test_store_persists_matching_flow():
+def test_store_persists_matching_flow(tmp_path):
     strategy = _StubStrategy(
         hosts=("api.anthropic.com",),
         prefixes=("/v1/messages",),
     )
-    sink = InMemoryCaptureSink()
+    sink = JsonFileCaptureSink(directory=str(tmp_path), filename="capture.json")
     repository = CaptureRepository(strategy=strategy, sink=sink)
 
     flow = _flow("api.anthropic.com", "/v1/messages")
@@ -60,15 +61,15 @@ def test_store_persists_matching_flow():
 
     assert stored is True
     assert repository.all() == [capture]
-    assert sink.records == [capture]
+    assert json.loads(sink.path.read_text(encoding="utf-8")) == capture
 
 
-def test_store_skips_non_matching_host():
+def test_store_skips_non_matching_host(tmp_path):
     strategy = _StubStrategy(
         hosts=("api.anthropic.com",),
         prefixes=("/v1/messages",),
     )
-    sink = InMemoryCaptureSink()
+    sink = JsonFileCaptureSink(directory=str(tmp_path), filename="capture.json")
     repository = CaptureRepository(strategy=strategy, sink=sink)
 
     flow = _flow("other.example.com", "/v1/messages")
@@ -77,15 +78,15 @@ def test_store_skips_non_matching_host():
 
     assert stored is False
     assert repository.all() == []
-    assert sink.records == []
+    assert not sink.path.exists()
 
 
-def test_store_skips_non_matching_path():
+def test_store_skips_non_matching_path(tmp_path):
     strategy = _StubStrategy(
         hosts=("api.anthropic.com",),
         prefixes=("/v1/messages",),
     )
-    sink = InMemoryCaptureSink()
+    sink = JsonFileCaptureSink(directory=str(tmp_path), filename="capture.json")
     repository = CaptureRepository(strategy=strategy, sink=sink)
 
     flow = _flow("api.anthropic.com", "/v1/other")
@@ -94,15 +95,15 @@ def test_store_skips_non_matching_path():
 
     assert stored is False
     assert repository.all() == []
-    assert sink.records == []
+    assert not sink.path.exists()
 
 
-def test_reset_clears_in_memory_and_sink():
+def test_reset_clears_in_memory_and_sink(tmp_path):
     strategy = _StubStrategy(
         hosts=("api.anthropic.com",),
         prefixes=("/v1/messages",),
     )
-    sink = InMemoryCaptureSink()
+    sink = JsonFileCaptureSink(directory=str(tmp_path), filename="capture.json")
     repository = CaptureRepository(strategy=strategy, sink=sink)
 
     flow = _flow("api.anthropic.com", "/v1/messages")
@@ -111,4 +112,4 @@ def test_reset_clears_in_memory_and_sink():
     repository.reset()
 
     assert repository.all() == []
-    assert sink.records == []
+    assert not sink.path.exists()
