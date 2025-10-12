@@ -158,6 +158,13 @@ src/
 - **Proxy orchestration integration**: `MitmproxyCapture` now composes the new runner via `self.command_runner`, preserving logging/telemetry while aligning with the refactored architecture.
 - **Test relocation**: Moved the command execution unit tests to `tests/infrastructure/test_command_runner.py`, keeping coverage on preflight/version handling and main command execution through patched `subprocess.run`.
 
+## Step 5 Progress – Capture Persistence
+- **Repository abstraction**: Added `CaptureRepository` with a `CaptureSink` protocol plus `JsonFileCaptureSink` and `InMemoryCaptureSink` implementations under `claudit.infrastructure.capture`, allowing agent-defined host/path filters to mediate persistence.
+- **Addon wiring**: `CaptureAddon` now injects the repository, proxies `captured_data`, and increments capture ids only when the strategy approves storage, eliminating direct file writes.
+- **Mitmproxy integration**: `MitmproxyCapture` builds a repository per session and resets it before each run, so capture lifecycles no longer rely on the addon’s internal lists.
+- **Safety nets**: Introduced `tests/infrastructure/capture/test_repository.py` to cover host/path filtering, sink persistence, and reset behaviour.
+- **Verification**: `mise test-all` passes following the persistence refactor.
+
 ## Supplemental Progress – Package Layout
 - **Namespaced layout**: Re-homed runtime modules under `src/claudit/` and added a minimal `claudit.__init__` so imports are consistent (`claudit.claude_client`, etc.) across environments.
 - **Import cleanup**: Switched the codebase to absolute `claudit.*` imports and removed the earlier stop-gap relative/try-import logic. Tests now import via the package and `tests/conftest.py` prepends the repo’s `src` directory for local runs.

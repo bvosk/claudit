@@ -10,6 +10,8 @@ from claudit.agents.base import AgentStrategy
 from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.capture_addon import CaptureAddon
 from claudit.infrastructure.agent_command_runner import AgentCommandRunner
+from claudit.infrastructure.capture import CaptureRepository
+from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
 
 
 class MitmproxyCapture:
@@ -30,10 +32,14 @@ class MitmproxyCapture:
         self.proxy_port = proxy_port
         self.strategy: AgentStrategy = strategy or ClaudeCodeStrategy()
         self.master: Optional[DumpMaster] = None
+        self.capture_repository = CaptureRepository(
+            strategy=self.strategy,
+            sink=JsonFileCaptureSink(
+                directory="captures", filename=f"{self.strategy.name}.json"
+            ),
+        )
         self.capture_addon = CaptureAddon(
-            agent_name=self.strategy.name,
-            api_hosts=self.strategy.api_hosts(),
-            api_path_prefixes=self.strategy.api_path_prefixes(),
+            repository=self.capture_repository,
         )
         self.command_runner = AgentCommandRunner(
             self.proxy_port, strategy=self.strategy
@@ -197,7 +203,7 @@ class MitmproxyCapture:
         self.logger.info("Starting capture session (port=%d)", self.proxy_port)
         try:
             # Clear existing in-memory captures
-            self.capture_addon.captured_data = []
+            self.capture_repository.reset()
             self.logger.debug("Cleared previous captured data buffer")
 
             # Start mitmproxy concurrently
@@ -209,7 +215,7 @@ class MitmproxyCapture:
             await loop.run_in_executor(None, self._run_agent_and_store)
 
             # Snapshot captured flows
-            captured_data = self.capture_addon.captured_data.copy()
+            captured_data = self.capture_repository.all()
             self.logger.info("Captured %d qualifying request(s)", len(captured_data))
 
             # Begin graceful shutdown

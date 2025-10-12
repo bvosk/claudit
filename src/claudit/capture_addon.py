@@ -1,39 +1,32 @@
-from datetime import datetime
-from typing import Sequence
-
 import json
 import logging
-import os
+from datetime import datetime
 
 from mitmproxy import http
+
+from claudit.infrastructure.capture import CaptureRepository
 
 
 class CaptureAddon:
     def __init__(
         self,
-        *,
-        agent_name: str,
-        api_hosts: Sequence[str],
-        api_path_prefixes: Sequence[str],
+        repository: CaptureRepository,
     ):
         self.logger = logging.getLogger(__name__)
         self.request_count = 0
-        self.captured_data = []
-        self._api_hosts = tuple(host.lower() for host in api_hosts)
-        self._api_path_prefixes = tuple(api_path_prefixes)
+        self._repository = repository
 
-        # Create captures directory if it doesn't exist
-        os.makedirs("captures", exist_ok=True)
+    @property
+    def captured_data(self) -> list[dict]:
+        return self._repository.all()
 
-        # Create agent-specific filename for this session
-        filename = f"{agent_name}.json" if agent_name else "capture.json"
-        self.capture_file = os.path.join("captures", filename)
+    @captured_data.setter
+    def captured_data(self, _value) -> None:
+        self.request_count = 0
+        self._repository.reset()
 
     def response(self, flow: http.HTTPFlow) -> None:
         """Called when a response is received"""
-        if not self._is_tracked_request(flow):
-            return
-
         if not flow.response:
             self.logger.warning(
                 f"Response method called for flow with no response: {flow.request.pretty_url}"
@@ -41,11 +34,10 @@ class CaptureAddon:
             return
 
         try:
-            self.request_count += 1
-
+            next_id = self.request_count + 1
             # Create capture record
             capture_data = {
-                "id": self.request_count,
+                "id": next_id,
                 "timestamp": datetime.fromtimestamp(
                     flow.response.timestamp_start
                 ).isoformat(),
@@ -69,11 +61,9 @@ class CaptureAddon:
                 ),
             }
 
-            # Store data in memory
-            self.captured_data.append(capture_data)
-
-            # Write to file
-            self._write_capture_to_file(capture_data)
+            stored = self._repository.store(flow, capture_data)
+            if stored:
+                self.request_count = next_id
 
             self.logger.debug(
                 f"Response headers: {dict(flow.response.headers)}\n"
@@ -85,9 +75,6 @@ class CaptureAddon:
 
     def error(self, flow: http.HTTPFlow) -> None:
         """Called when a flow encounters an error"""
-        if not self._is_tracked_request(flow):
-            return
-
         error_data = {
             "id": self.request_count,
             "timestamp": datetime.now().isoformat(),
@@ -99,8 +86,7 @@ class CaptureAddon:
             "error_message": str(flow.error) if flow.error else "Unknown error",
         }
 
-        self.captured_data.append(error_data)
-        self._write_capture_to_file(error_data)
+        self._repository.store(flow, error_data)
         self.logger.error(f"Flow error for {flow.request.pretty_url}: {flow.error}")
 
     def _mask_sensitive_headers(self, headers: dict) -> dict:
@@ -146,27 +132,3 @@ class CaptureAddon:
                 return content.decode("latin1")
             except UnicodeDecodeError:
                 return f"<binary data: {len(content)} bytes>"
-
-    def _is_tracked_request(self, flow: http.HTTPFlow) -> bool:
-        """Check if the request matches the configured host/path filters."""
-        try:
-            host = (flow.request.host or "").lower()
-            path = flow.request.path or ""
-
-            if self._api_hosts and host not in self._api_hosts:
-                return False
-
-            if not self._api_path_prefixes:
-                return True
-
-            return any(path.startswith(prefix) for prefix in self._api_path_prefixes)
-        except Exception:
-            return False
-
-    def _write_capture_to_file(self, capture_data: dict) -> None:
-        """Write captured data to timestamped JSON file"""
-        try:
-            with open(self.capture_file, "w") as f:
-                f.write(json.dumps(capture_data, indent=2) + "\n")
-        except Exception as e:
-            self.logger.error(f"Error writing capture to file: {e}")
