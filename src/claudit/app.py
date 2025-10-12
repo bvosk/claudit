@@ -8,13 +8,9 @@ import io
 import sys
 from contextlib import redirect_stdout, redirect_stderr
 
-from pathlib import Path
-
-from claudit.agents.base import AgentStrategy
 from claudit.agents.claude_code import ClaudeCodeStrategy
+from claudit.application.capture_service import CaptureService
 from claudit.claude_content_scrubber import ClaudeContentScrubber
-from claudit.domain.prompts import PromptExtractor, PromptWriter
-from claudit.mitmproxy_capture import MitmproxyCapture
 from claudit.prompt_formatter import render_prompt_markdown
 
 
@@ -61,22 +57,6 @@ def signal_handler(signum, frame):
     sys.exit(0)
 
 
-async def capture_claude_traffic(strategy: AgentStrategy):
-    """Capture Claude's HTTP traffic using the working http_only configuration"""
-    logger = logging.getLogger(__name__)
-
-    try:
-        logger.info("Starting HTTP traffic capture")
-        capture = MitmproxyCapture(strategy=strategy)
-        data = await capture.capture_and_return()
-        logger.info(f"Captured {len(data)} requests successfully")
-        return data
-
-    except Exception as e:
-        logger.error(f"Traffic capture failed: {e}")
-        return []
-
-
 async def async_main():
     strategy = ClaudeCodeStrategy()
     signal.signal(signal.SIGINT, signal_handler)
@@ -85,22 +65,19 @@ async def async_main():
     stderr_capture = io.StringIO()
 
     with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-        captured_data = await capture_claude_traffic(strategy)
+        workflow_service = CaptureService.build(
+            strategy=strategy,
+            content_scrubber=ClaudeContentScrubber.scrub_prompt_data,
+            prompt_renderer=render_prompt_markdown,
+        )
+        result = await workflow_service.run()
+
+    captured_data = result.captures
 
     print(f"Captured {len(captured_data)} requests")
 
-    if captured_data:
-        extractor = PromptExtractor(strategy=strategy)
-        prompt = extractor.extract(captured_data)
-
-        clean_prompt = ClaudeContentScrubber.scrub_prompt_data(prompt)
-
-        markdown_content = render_prompt_markdown(clean_prompt)
-
-        writer = PromptWriter(Path("prompts"), filename=f"{strategy.name}.md")
-        output_path = writer.write(markdown_content)
-
-        print(f"Markdown written to {output_path}")
+    if result.markdown_path:
+        print(f"Markdown written to {result.markdown_path}")
 
 
 def main():

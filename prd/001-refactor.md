@@ -172,6 +172,12 @@ src/
 - **Testing**: Added `tests/infrastructure/test_mitmproxy_runner.py` with async coverage for readiness success, failure timeout, and forced cancellation paths.
 - **Verification**: Full suite via `mise test-all` still green after the runner integration.
 
+- **Application layer**: Added `CaptureService` under `claudit.application.capture_service`, orchestrating the runner, command runner, capture repository/addon, prompt extractor, scrubber, renderer, and writer behind a single async `run()` entry point that returns aggregated results.
+- **CLI integration**: `app.py` now constructs the workflow service via the new `build` helper and relies on `CaptureWorkflowResult` metadata to report capture counts and Markdown paths, eliminating direct references to `MitmproxyCapture`.
+- **Convenience constructor**: `CaptureService.build` wires default infrastructure (repository, sinks, runner, command runner, extractor, writer) while accepting the strategy’s scrubber and renderer hooks for flexibility.
+- **Testing**: Introduced `tests/application/test_capture_workflow_service.py` with fake runner/command/repository components to validate happy-path prompt generation and the no-capture branch without touching real mitmproxy.
+- **Verification**: `mise test-all` (75 tests) passes post-integration, covering the new service tests alongside existing suites.
+
 ## Supplemental Progress – Package Layout
 - **Namespaced layout**: Re-homed runtime modules under `src/claudit/` and added a minimal `claudit.__init__` so imports are consistent (`claudit.claude_client`, etc.) across environments.
 - **Import cleanup**: Switched the codebase to absolute `claudit.*` imports and removed the earlier stop-gap relative/try-import logic. Tests now import via the package and `tests/conftest.py` prepends the repo’s `src` directory for local runs.
