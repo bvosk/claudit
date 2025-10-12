@@ -1,6 +1,5 @@
 """Tests for ClaudeContentScrubber"""
 
-# removed unused pytest import
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -17,40 +16,52 @@ class TestClaudeContentScrubber:
             mock_dt.now.return_value.strftime.return_value = "2025-09-11"
 
             text_with_date = "Today's date: 2025-09-11\nOther content here."
-            result = ClaudeContentScrubber.scrub_text_content(text_with_date)
+            result = ClaudeContentScrubber.scrub(self._from_text(text_with_date))
+            prompt_text = self._get_system_text(result)
 
-            assert "Today's date: [date]" in result
-            assert "2025-09-11" not in result
-            assert "Other content here." in result
+            assert "Today's date: [date]" in prompt_text
+            assert "2025-09-11" not in prompt_text
+            assert "Other content here." in prompt_text
 
     def test_scrub_text_content_empty_string(self):
         """Test scrubbing empty string returns empty string"""
-        result = ClaudeContentScrubber.scrub_text_content("")
-        assert result == ""
+        result = ClaudeContentScrubber.scrub(self._from_text(""))
+        prompt_text = self._get_system_text(result)
+        assert prompt_text == ""
 
     def test_scrub_text_content_no_dynamic_content(self):
         """Test scrubbing text with no dynamic content leaves it unchanged"""
         clean_text = "This is clean text with no dynamic content."
-        result = ClaudeContentScrubber.scrub_text_content(clean_text)
-        assert result == clean_text
+
+        result = ClaudeContentScrubber.scrub(self._from_text(clean_text))
+        prompt_text = self._get_system_text(result)
+
+        assert prompt_text == clean_text
 
     def test_scrub_date_references_specific_date(self):
         """Test date reference scrubbing with specific date"""
         with patch("claudit.claude_content_scrubber.datetime") as mock_dt:
             mock_dt.now.return_value.strftime.return_value = "2024-12-25"
+            result = ClaudeContentScrubber.scrub(self._from_text("Today's date: 2024-12-25 is Christmas!"))
+            prompt_text = self._get_system_text(result)
 
-            text = "Today's date: 2024-12-25 is Christmas!"
-            result = ClaudeContentScrubber.scrub_text_content(text)
-
-            assert result == "Today's date: [date] is Christmas!"
+            assert prompt_text == "Today's date: [date] is Christmas!"
 
     def test_prompt_with_no_metadata(self):
         """Test scrubbing prompt with no metadata"""
-        prompt = Prompt(
-            system=[{"type": "text", "text": "Hello"}],
+        result = ClaudeContentScrubber.scrub(self._from_text("Hello"))
+
+        assert result.metadata == {}
+
+    @staticmethod
+    def _from_text(text: str):
+        """Create a prompt from text"""
+        return Prompt(
+            system=[{"type": "text", "text": text}],
             timestamp=datetime.now(timezone.utc),
         )
 
-        result = ClaudeContentScrubber.scrub_prompt_data(prompt)
-
-        assert result.metadata == {}
+    @staticmethod
+    def _get_system_text(prompt: Prompt):
+        """Get the system text from a prompt"""
+        return prompt.system[0]["text"]

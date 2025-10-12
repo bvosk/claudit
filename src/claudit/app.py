@@ -67,7 +67,7 @@ async def async_main():
     with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
         workflow_service = CaptureService.build(
             strategy=strategy,
-            content_scrubber=ClaudeContentScrubber.scrub_prompt_data,
+            content_scrubber=ClaudeContentScrubber.scrub,
             prompt_renderer=render_prompt_markdown,
         )
         result = await workflow_service.run()
