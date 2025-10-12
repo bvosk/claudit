@@ -33,9 +33,6 @@ def render_prompt_markdown(prompt: Prompt) -> str:
     return rendered_content
 
 
-# Legacy functions removed - no longer needed since we get data directly from Prompt object
-
-
 def _find_template_directory() -> Path:
     candidates = [
         Path(__file__).parent.parent / "templates",
@@ -52,9 +49,6 @@ def _find_template_directory() -> Path:
         + ", ".join(str(p) for p in candidates)
         + ")"
     )
-
-
-# _get_system_prompts and _get_tools functions removed - data comes directly from Prompt object
 
 
 __all__ = ["render_prompt_markdown"]
