@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Sequence
 
 from claudit.agents.base import AgentStrategy, CommandSpec
@@ -67,15 +66,6 @@ class ClaudeCodeStrategy(AgentStrategy):
         capture = captured_data[0]
         request_data = capture.get("request", {})
 
-        timestamp_str = capture.get("timestamp")
-        if timestamp_str:
-            try:
-                timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-            except ValueError:
-                timestamp = datetime.now(timezone.utc)
-        else:
-            timestamp = datetime.now(timezone.utc)
-
         request_content = request_data.get("content", {})
         if isinstance(request_content, str):
             try:
@@ -86,21 +76,25 @@ class ClaudeCodeStrategy(AgentStrategy):
         if not isinstance(request_content, dict):
             raise ValueError("Request content is not valid JSON")
 
-        system_messages = request_content.get("system", [])
-        if not isinstance(system_messages, list):
-            system_messages = []
+        raw_system = request_content.get("system", [])
+        if not isinstance(raw_system, list):
+            raw_system = [raw_system] if raw_system else []
+
+        system_prompts: List[str] = []
+        for item in raw_system:
+            if isinstance(item, str):
+                system_prompts.append(item)
+            elif isinstance(item, dict):
+                text_value = item.get("text")
+                if isinstance(text_value, str):
+                    system_prompts.append(text_value)
+                else:
+                    system_prompts.append(json.dumps(item))
+            else:
+                system_prompts.append(str(item))
 
         tools = request_content.get("tools", [])
         if not isinstance(tools, list):
             tools = []
 
-        metadata = {
-            "source": self.name,
-            "capture_id": capture.get("id"),
-            "request_url": request_data.get("url", ""),
-            "request_method": request_data.get("method", ""),
-        }
-
-        return Prompt(
-            system=system_messages, timestamp=timestamp, tools=tools, metadata=metadata
-        )
+        return Prompt(system=system_prompts, tools=tools)

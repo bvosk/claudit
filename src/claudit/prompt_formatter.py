@@ -14,8 +14,13 @@ def render_prompt_markdown(prompt: Prompt) -> str:
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     template = env.get_template("claudecode.md")
 
+    system_messages = [
+        {"type": "text", "text": entry if isinstance(entry, str) else str(entry)}
+        for entry in prompt.system
+    ]
+
     template_data = {
-        "system": prompt.system,
+        "system": system_messages,
         "tools": prompt.tools,
     }
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -92,8 +91,8 @@ async def test_run_generates_markdown_when_captures_present():
     runner = _StubRunner()
     command_runner = _StubCommandRunner({"success": True})
 
-    prompt = Prompt(system=[], timestamp=datetime.now(timezone.utc))
-    scrubbed_prompt = Prompt(system=[], timestamp=prompt.timestamp, metadata={"scrubbed": True})
+    prompt = Prompt(system=["original prompt"])
+    scrubbed_prompt = Prompt(system=["scrubbed prompt"])
     extractor = _StubExtractor(prompt=prompt)
 
     scrub_calls: List[Prompt] = []
@@ -158,7 +157,7 @@ async def test_run_skips_prompt_when_no_captures():
 
         def extract(self, captures):
             self.called = True
-            return Prompt(system=[], timestamp=datetime.now(timezone.utc))
+            return Prompt(system=[])
 
     extractor = _SpyExtractor()
 

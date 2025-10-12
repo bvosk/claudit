@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 import pytest
@@ -43,12 +42,7 @@ class _ErrorStrategy(_FakeStrategy):
 
 
 def test_prompt_extractor_delegates_to_strategy():
-    prompt = Prompt(
-        system=[],
-        tools=[],
-        timestamp=datetime.now(timezone.utc),
-        metadata={"source": "fake"},
-    )
+    prompt = Prompt(system=[], tools=[])
     strategy = _FakeStrategy(prompt=prompt)
     extractor = PromptExtractor(strategy=strategy)
 
@@ -60,12 +54,7 @@ def test_prompt_extractor_delegates_to_strategy():
 
 
 def test_prompt_extractor_propagates_strategy_errors():
-    prompt = Prompt(
-        system=[],
-        tools=[],
-        timestamp=datetime.now(timezone.utc),
-        metadata={"source": "fake"},
-    )
+    prompt = Prompt(system=[], tools=[])
     strategy = _ErrorStrategy(prompt=prompt)
     extractor = PromptExtractor(strategy=strategy)
 

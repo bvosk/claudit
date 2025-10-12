@@ -1,6 +1,4 @@
 import json
-from datetime import datetime, timezone
-from unittest.mock import patch
 
 import pytest
 
@@ -76,7 +74,6 @@ class TestClaudeCodeStrategyPromptExtraction:
         captured_data = [
             {
                 "id": 1,
-                "timestamp": "2025-01-01T12:00:00Z",
                 "request": {
                     "method": "POST",
                     "url": "https://api.anthropic.com/v1/messages",
@@ -92,8 +89,8 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         prompt = self.strategy.extract_prompt(captured_data)
 
-        assert prompt.metadata["source"] == self.strategy.name
-        assert prompt.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
+        assert prompt.system == ["You are a helpful assistant."]
+        assert prompt.tools == [{"name": "test_tool", "description": "A test tool"}]
 
     def test_extract_prompt_accepts_json_string_payload(self):
         content_dict = {
@@ -114,29 +111,7 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         prompt = self.strategy.extract_prompt(captured_data)
 
-        assert prompt.system[0]["text"] == "System prompt"
-
-    def test_extract_prompt_invalid_timestamp_falls_back_to_now(self):
-        strategy = ClaudeCodeStrategy()
-        fake_now = datetime(2025, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
-
-        with patch(
-            "claudit.agents.claude_code.claude_code_strategy.datetime"
-        ) as mock_dt:
-            mock_dt.now.return_value = fake_now
-            mock_dt.fromisoformat = datetime.fromisoformat
-
-            captured_data = [
-                {
-                    "id": 1,
-                    "timestamp": "invalid",
-                    "request": {"content": {"system": []}},
-                }
-            ]
-
-            prompt = strategy.extract_prompt(captured_data)
-
-        assert prompt.timestamp == fake_now
+        assert prompt.system == ["System prompt"]
 
     def test_extract_prompt_raises_for_non_dict_payload(self):
         captured_data = [
@@ -165,6 +140,28 @@ class TestClaudeCodeStrategyPromptExtraction:
         assert prompt.system == []
         assert prompt.tools == []
 
+    def test_extract_prompt_converts_non_text_system_entries(self):
+        captured_data = [
+            {
+                "id": 1,
+                "request": {
+                    "content": {
+                        "system": [
+                            {"type": "text", "text": "Primary"},
+                            {"not": "text"},
+                            123,
+                        ]
+                    }
+                },
+            }
+        ]
+
+        prompt = self.strategy.extract_prompt(captured_data)
+
+        assert prompt.system[0] == "Primary"
+        assert prompt.system[1].startswith("{")  # serialized fallback
+        assert prompt.system[2] == "123"
+
     def test_extract_prompt_defaults_missing_system_and_tools(self):
         captured_data = [
             {
@@ -177,25 +174,6 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         assert prompt.system == []
         assert prompt.tools == []
-
-    def test_extract_prompt_populates_metadata_fields(self):
-        captured_data = [
-            {
-                "id": 42,
-                "request": {
-                    "method": "POST",
-                    "url": "https://api.anthropic.com/v1/messages",
-                    "content": {"system": []},
-                },
-            }
-        ]
-
-        prompt = self.strategy.extract_prompt(captured_data)
-
-        assert prompt.metadata["source"] == self.strategy.name
-        assert prompt.metadata["capture_id"] == 42
-        assert prompt.metadata["request_url"] == "https://api.anthropic.com/v1/messages"
-        assert prompt.metadata["request_method"] == "POST"
 
     def test_extract_prompt_uses_first_capture(self):
         captured_data = [
@@ -213,8 +191,7 @@ class TestClaudeCodeStrategyPromptExtraction:
 
         prompt = self.strategy.extract_prompt(captured_data)
 
-        assert prompt.metadata["capture_id"] == 2
-        assert prompt.system[0]["text"] == "Second"
+        assert prompt.system[0] == "Second"
 
     def test_extract_prompt_requires_data(self):
         with pytest.raises(ValueError, match="No captured data provided"):

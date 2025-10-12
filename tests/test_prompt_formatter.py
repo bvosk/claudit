@@ -1,7 +1,6 @@
-import pytest
-
 from pathlib import Path
-from datetime import datetime, timezone
+
+import pytest
 
 from claudit.models import Prompt
 from claudit.prompt_formatter import render_prompt_markdown
@@ -11,8 +10,7 @@ from claudit.prompt_formatter import render_prompt_markdown
 @pytest.fixture
 def sample_prompt():
     return Prompt(
-        system=[{"type": "text", "text": "You are a helpful assistant."}],
-        timestamp=datetime.now(timezone.utc),
+        system=["You are a helpful assistant."],
         tools=[
             {
                 "name": "get_weather",
@@ -78,7 +76,6 @@ class TestRenderPromptMarkdown:
         # Test with empty system messages
         prompt = Prompt(
             system=[],
-            timestamp=datetime.now(timezone.utc),
         )
 
         # Should not raise exception - template should handle empty lists gracefully
@@ -93,8 +90,7 @@ class TestRenderPromptMarkdown:
     def test_render_prompt_markdown_empty_tools(self):
         # Test with empty tools list
         prompt = Prompt(
-            system=[{"type": "text", "text": "Hello"}],
-            timestamp=datetime.now(timezone.utc),
+            system=["Hello"],
             tools=[],
         )
 

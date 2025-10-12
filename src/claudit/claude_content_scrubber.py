@@ -5,7 +5,7 @@ This module handles the scrubbing of dynamic or unwanted content from Claude pro
 """
 
 import copy
-from typing import Dict, Any
+from typing import Any
 from datetime import datetime
 
 from claudit.models import Prompt
@@ -18,33 +18,20 @@ class ClaudeContentScrubber:
     def scrub(cls, prompt: Prompt) -> Prompt:
         """Scrub all dynamic content from a Prompt object."""
         return Prompt(
-            system=[cls._scrub_dict(msg) for msg in prompt.system],
-            timestamp=prompt.timestamp,
-            tools=[cls._scrub_dict(tool) for tool in prompt.tools],
-            metadata=copy.deepcopy(prompt.metadata),
+            system=[cls._scrub_text_content(text) for text in prompt.system],
+            tools=[cls._scrub_value(tool) for tool in prompt.tools],
         )
 
     @classmethod
-    def _scrub_dict(cls, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Scrub text content from dictionary and nested structures."""
-        result = {}
-        for key, value in data.items():
-            if isinstance(value, str):
-                result[key] = cls._scrub_text_content(value)
-            elif isinstance(value, dict):
-                result[key] = cls._scrub_dict(value)
-            elif isinstance(value, list):
-                result[key] = [
-                    (
-                        cls._scrub_text_content(item)
-                        if isinstance(item, str)
-                        else cls._scrub_dict(item) if isinstance(item, dict) else item
-                    )
-                    for item in value
-                ]
-            else:
-                result[key] = copy.deepcopy(value)
-        return result
+    def _scrub_value(cls, data: Any) -> Any:
+        """Scrub text content from arbitrary nested structures."""
+        if isinstance(data, str):
+            return cls._scrub_text_content(data)
+        if isinstance(data, dict):
+            return {key: cls._scrub_value(value) for key, value in data.items()}
+        if isinstance(data, list):
+            return [cls._scrub_value(item) for item in data]
+        return copy.deepcopy(data)
 
     @classmethod
     def _scrub_text_content(cls, text: str) -> str:

@@ -440,45 +440,24 @@ class CapturedRequest:
 @dataclass
 class Prompt:
     """
-    Generic prompt structure for any AI application.
-
-    This data class represents the essential components of an AI prompt:
-    system instructions and available tools. It's designed to be app-agnostic
-    and can work with Claude, OpenAI, or other AI systems.
+    Minimal prompt representation containing only system text and tools.
 
     Attributes:
-        system: List of system prompt message objects
-        tools: List of tool/function definitions available to the AI
-        timestamp: When this prompt was captured/created
-        metadata: Optional additional data for debugging or context
+        system: Ordered list of system prompt strings.
+        tools: Ordered list of tool descriptions (structure left intentionally loose).
     """
 
-    system: List[Dict[str, Any]]
-    timestamp: datetime
-    tools: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    system: List[str] = field(default_factory=list)
+    tools: List[Any] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not isinstance(self.system, list):
-            raise ValidationError("system must be a list of message objects")
+            raise ValidationError("system must be a list")
+        for i, value in enumerate(self.system):
+            if not isinstance(value, str):
+                raise ValidationError(f"system[{i}] must be a string")
         if not isinstance(self.tools, list):
-            raise ValidationError("tools must be a list of tool definition objects")
-        if not isinstance(self.timestamp, datetime):
-            raise ValidationError("timestamp must be datetime instance")
-
-        # Validate system messages have required structure
-        for i, msg in enumerate(self.system):
-            if not isinstance(msg, dict):
-                raise ValidationError(f"system[{i}] must be a dictionary")
-            if "type" not in msg or "text" not in msg:
-                raise ValidationError(f"system[{i}] must have 'type' and 'text' fields")
-
-        # Validate tool definitions have required structure
-        for i, tool in enumerate(self.tools):
-            if not isinstance(tool, dict):
-                raise ValidationError(f"tools[{i}] must be a dictionary")
-            if "name" not in tool:
-                raise ValidationError(f"tools[{i}] must have 'name' field")
+            raise ValidationError("tools must be a list")
 
     def validate(self) -> None:
         """Explicit re-validation hook."""
