@@ -11,19 +11,20 @@ This setup uses a pure Python implementation with mitmproxy running in reverse p
 
 ## Architecture
 
-- **Pure Python Implementation**: No bash scripts, cleaner error handling
-- **Programmatic mitmproxy**: Uses mitmproxy's Python API directly
-- **Structured Logging**: Proper Python logging with timestamps
-- **JSON Lines Output**: Easy to parse and process
-- **Reverse Proxy Mode**: mitmproxy runs with `--mode reverse:https://api.anthropic.com`, while `ANTHROPIC_BASE_URL=http://localhost:8080` points the Claude CLI at the local proxy so requests are captured without relying on HTTP(S)_PROXY variables.
+- **CaptureService orchestration**: `claudit.application.capture_service.CaptureService` wires the agent strategy, mitmproxy runner, capture repository, prompt extractor, scrubber, renderer, and writer behind a single async workflow.
+- **Programmatic mitmproxy**: `MitmproxyRunner` wraps mitmproxy's Python API and exposes an async context manager that handles startup, readiness polling, shutdown, and socket release.
+- **Repository-backed persistence**: `CaptureRepository` funnels qualifying flows into strategy-specific sinks (JSON file for artefacts, in-memory list for prompt extraction).
+- **Strategy-driven commands**: `AgentCommandRunner` executes the active agent's CLI with injected proxy environment variables and stdout/stderr scrubbing.
+- **Structured Logging**: Centralised Python logging keeps mitmproxy chatter out of the console while surfacing workflow updates.
+- **Reverse Proxy Mode**: mitmproxy still runs in `reverse:https://api.anthropic.com`; `CaptureService.build()` configures the runner and command runner so the Claude CLI targets `http://localhost:8080` without mutating proxy environment variables.
 
 ## Reverse Proxy Mode
 
 The service starts mitmproxy in reverse mode targeting `https://api.anthropic.com` and sets `ANTHROPIC_BASE_URL` to `http://localhost:8080`. The Claude CLI sends inference traffic directly to the proxy host, which forwards upstream while logging `/v1/messages` requests and responses.  The custom base URL is injected automatically.
 
 Captured traffic:
-- Written (overwritten per run) to `captures/claudecode.json`
-- First captured exchange also rendered to `claudecode.md`
+- Persisted to `captures/<agent>.json`
+- Latest prompt rendered to `prompts/<agent>.md`
 
 ### Testing
 
