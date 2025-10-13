@@ -21,7 +21,7 @@
 - **Infrastructure Layer**
   - `MitmproxyRunner`: owns mitmproxy lifecycle (setup/start/stop) and surfaces async context manager/explicit start-stop methods.
   - `ClaudeCommandRunner` → generalized `AgentCommandRunner` that delegates to the active `AgentStrategy` for command/timeout/env overrides.
-  - `CaptureSink` protocol + implementations (`InMemoryCaptureSink`, `JsonFileCaptureSink`) to centralize persistence.
+- `JsonFileCaptureSink` handles persistence for captured flows.
 - **Domain Layer**
   - `CaptureRepository`: coordinates data flow from mitmproxy addon into sinks and exposes normalized capture DTOs per agent.
   - `PromptExtractor`: strategy-aware component that delegates to `AgentStrategy` for parsing API payloads into `Prompt` objects.
@@ -62,7 +62,6 @@ src/
       repository.py         # CaptureRepository coordinating addon + sinks
       sinks/
         __init__.py
-        in_memory.py        # InMemoryCaptureSink implementation
         json_file.py        # JsonFileCaptureSink implementation
   presentation/
     __init__.py
@@ -97,7 +96,7 @@ src/
    - Patch tests to cover strategy-driven invocation using mocks for `subprocess.run`.
 
 5. **Isolate Capture Persistence**
-   - Introduce `CaptureSink` and `CaptureRepository`.
+   - Introduce `CaptureRepository` backed by a `JsonFileCaptureSink`.
    - Refactor `CaptureAddon` to depend on a repository (constructor injection) instead of performing file writes directly.
    - Allow repository to apply agent strategy filters (only store flows matching strategy-defined endpoints) and write via sink.
    - Add tests with fake flows verifying filtering and persistence.
@@ -159,7 +158,7 @@ src/
 - **Test relocation**: Moved the command execution unit tests to `tests/infrastructure/test_command_runner.py`, keeping coverage on preflight/version handling and main command execution through patched `subprocess.run`.
 
 ## Step 5 Progress – Capture Persistence
-- **Repository abstraction**: Added `CaptureRepository` with a `CaptureSink` protocol plus `JsonFileCaptureSink` and `InMemoryCaptureSink` implementations under `claudit.infrastructure.capture`, allowing agent-defined host/path filters to mediate persistence.
+- **Repository abstraction**: Added `CaptureRepository` with a `JsonFileCaptureSink` implementation under `claudit.infrastructure.capture`, allowing agent-defined host/path filters to mediate persistence.
 - **Addon wiring**: `CaptureAddon` now injects the repository, proxies `captured_data`, and increments capture ids only when the strategy approves storage, eliminating direct file writes.
 - **Workflow integration**: The capture workflow resets the repository per session, so capture lifecycles no longer rely on the addon's internal lists.
 - **Safety nets**: Introduced `tests/infrastructure/capture/test_repository.py` to cover host/path filtering, sink persistence, and reset behaviour.

@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from claudit.infrastructure.mitmproxy_runner import MitmproxyRunner
+from claudit.runtime.mitmproxy_runner import MitmproxyRunner
 
 
 class _StubWriter:

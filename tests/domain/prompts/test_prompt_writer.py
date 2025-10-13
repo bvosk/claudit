@@ -1,6 +1,6 @@
 import pytest
 
-from claudit.domain.prompts import PromptWriter
+from claudit.prompts import PromptWriter
 
 
 def test_prompt_writer_writes_content(tmp_path):

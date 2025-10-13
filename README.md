@@ -99,32 +99,12 @@ Always prefer tasks to ad‑hoc commands so CI/local parity is maintained.
 
 ## Project Structure
 
-```
-.
-├── docker-compose.yml
-├── Dockerfile
-├── mise.toml
-├── pyproject.toml
-├── src/claudit/
-│   ├── app.py                        # Console entrypoint
-│   ├── application/capture_service.py
-│   ├── agents/
-│   │   ├── agent_strategy.py         # Strategy protocol
-│   │   └── claude_code/claude_code_strategy.py
-│   ├── infrastructure/
-│   │   ├── mitmproxy_runner.py       # Lifecycle + readiness
-│   │   ├── agent_command_runner.py   # CLI execution
-│   │   ├── capture/
-│   │   │   ├── repository.py
-│   │   │   └── sinks/{json_file,in_memory}.py
-│   ├── domain/prompts/{prompt_extractor.py,prompt_writer.py}
-│   ├── capture_addon.py              # mitmproxy addon hook
-│   ├── prompt_formatter.py           # Jinja2 renderer
-│   └── models.py                     # Config + capture models
-├── templates/claudecode.md           # Markdown template
-├── captures/                         # Latest JSON capture
-└── prompts/                          # Rendered Markdown prompt
-```
+- `src/claudit/agents/` keeps the base strategy contract and one subdirectory per agent (e.g., Claude Code) with its CLI wiring, prompt scrubbers, and related assets.
+- `src/claudit/capture/` owns the mitmproxy-facing workflow: the service that orchestrates runs, the addon that harvests traffic, the repository filters, and storage sinks.
+- `src/claudit/prompts/` centralises prompt extraction, Markdown rendering, persistence helpers, and the default shared template.
+- `src/claudit/runtime/` provides execution scaffolding such as the agent command runner and mitmproxy lifecycle manager.
+- The package root hosts shared models plus the command-line entrypoint that composes an agent with the capture pipeline.
+- `captures/` stores json dumps from the latest session; `prompts/` holds the rendered Markdown artefacts.
 
 ---
 
@@ -137,7 +117,7 @@ Always prefer tasks to ad‑hoc commands so CI/local parity is maintained.
    - Collect qualifying flows through `CaptureAddon` → `CaptureRepository`.
    - Extract domain `Prompt` via `PromptExtractor` & strategy logic.
    - Scrub prompt (`strategy.scrub_prompt()`).
-   - Render Markdown (`prompt_formatter.render_prompt_markdown`).
+   - Render Markdown (`PromptFormatter.render`).
    - Persist artefact (`PromptWriter`).
 2. `MitmproxyRunner` manages:
    - Port sanity / availability
@@ -179,15 +159,15 @@ You can implement custom redaction (IDs, timestamps, emails) in `scrub_prompt()`
 
 ## Template Rendering
 
-Jinja2 template: `templates/claudecode.md`
+Jinja2 template: `src/claudit/prompts/prompt_template.md`
 
 Variables provided:
 - `system`: list of `{ type: text, text: ... }`
 - `tools`: list of raw tool objects (rendered with JSON filter in template)
 
 To introduce a new template:
-- Add file to `templates/`
-- Provide a custom renderer or extend `prompt_formatter.py`
+- Add a file alongside `template.md`
+- Instantiate `PromptFormatter` with the new template path
 
 ---
 
@@ -304,14 +284,19 @@ docker build \
    - `scrub_prompt(prompt)`
 3. Use it:
 ```python
-from claudit.application.capture_service import CaptureService
+from claudit.capture import CaptureService
 from claudit.agents.my_agent.my_agent_strategy import MyAgentStrategy
-from claudit.prompt_formatter import render_prompt_markdown
+from claudit.prompts import (
+    DEFAULT_TEMPLATE_PATH,
+    PromptFormatter,
+)
+
+formatter = PromptFormatter(DEFAULT_TEMPLATE_PATH)
 
 service = CaptureService.build(
     strategy=MyAgentStrategy(),
     content_scrubber=lambda p: p,
-    prompt_renderer=render_prompt_markdown,
+    prompt_renderer=formatter.render,
 )
 # await service.run() in an async context
 ```

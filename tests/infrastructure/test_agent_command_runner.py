@@ -5,7 +5,7 @@ from unittest.mock import patch
 from typing import Any, Dict, List
 
 from claudit.agents.agent_strategy import CommandSpec
-from claudit.infrastructure.agent_command_runner import AgentCommandRunner
+from claudit.runtime.agent_command_runner import AgentCommandRunner
 
 
 class _DummyStrategy:
@@ -48,7 +48,7 @@ class TestAgentCommandRunner:
         runner = AgentCommandRunner(strategy=strategy)
 
         with patch(
-            "claudit.infrastructure.agent_command_runner.subprocess.run"
+            "claudit.runtime.agent_command_runner.subprocess.run"
         ) as mock_run:
             mock_run.side_effect = [
                 subprocess.CompletedProcess(
@@ -86,7 +86,7 @@ class TestAgentCommandRunner:
         runner = AgentCommandRunner(strategy=strategy)
 
         with patch(
-            "claudit.infrastructure.agent_command_runner.subprocess.run"
+            "claudit.runtime.agent_command_runner.subprocess.run"
         ) as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(
                 args="echo main",
