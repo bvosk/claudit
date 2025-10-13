@@ -45,4 +45,4 @@ typecheck              Typecheck code with basedpyright
 ### Code Style
 
 - The `black` formatter is used to format all Python code
-- Filenames should align to the the classes they define. For example the class `AgentStrategy` should be in a file called `agent_strategy.py`
+- Filenames should always match up with the classes they define. For example the class `AgentStrategy` should be in a file called `agent_strategy.py`

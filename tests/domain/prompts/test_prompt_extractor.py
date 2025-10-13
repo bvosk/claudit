@@ -2,7 +2,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from claudit.domain.prompts import PromptExtractor
+from claudit.prompts import PromptExtractor
 from claudit.models import Prompt
 
 

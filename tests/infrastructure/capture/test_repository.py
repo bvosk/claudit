@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Sequence, cast
 from mitmproxy import http
 
 from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
-from claudit.infrastructure.capture.capture_repository import CaptureRepository
-from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
+from claudit.capture import CaptureRepository
+from claudit.capture.sinks import JsonFileCaptureSink
 
 
 class _StubStrategy(AgentStrategy):

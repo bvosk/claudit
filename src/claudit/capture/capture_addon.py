@@ -4,7 +4,7 @@ from datetime import datetime
 
 from mitmproxy import http
 
-from claudit.infrastructure.capture import CaptureRepository
+from .capture_repository import CaptureRepository
 
 
 class CaptureAddon:

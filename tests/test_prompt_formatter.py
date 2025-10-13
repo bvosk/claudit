@@ -1,6 +1,6 @@
 import pytest
 
-from claudit.application.prompt_formatter import PromptFormatter
+from claudit.prompts import PromptFormatter
 from claudit.models import Prompt
 
 

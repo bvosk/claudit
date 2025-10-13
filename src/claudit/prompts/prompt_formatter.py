@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from claudit.models import Prompt
 
-DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "template.md"
+DEFAULT_TEMPLATE_PATH = Path(__file__).parent / "prompt_template.md"
 
 
 class PromptFormatter:

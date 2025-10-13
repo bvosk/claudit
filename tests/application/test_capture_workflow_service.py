@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from claudit.application.capture_service import CaptureService
+from claudit.capture import CaptureService
 from claudit.models import Prompt
 
 

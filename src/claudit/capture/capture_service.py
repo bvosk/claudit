@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
 from claudit.agents.agent_strategy import AgentStrategy
-from claudit.capture_addon import CaptureAddon
-from claudit.domain.prompts import PromptExtractor, PromptWriter
-from claudit.infrastructure.agent_command_runner import AgentCommandRunner
-from claudit.infrastructure.capture import CaptureRepository
-from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
-from claudit.infrastructure.mitmproxy_runner import MitmproxyRunner
 from claudit.models import Prompt
+from claudit.prompts import PromptExtractor, PromptWriter
+from claudit.runtime.agent_command_runner import AgentCommandRunner
+from claudit.runtime.mitmproxy_runner import MitmproxyRunner
+
+from .capture_addon import CaptureAddon
+from .capture_repository import CaptureRepository
+from .sinks import JsonFileCaptureSink
 
 
 PromptScrubber = Callable[[Prompt], Prompt]

@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 
 from claudit.agents.claude_code import ClaudeCodeStrategy
-from claudit.application.prompt_formatter import (
+from claudit.prompts import (
     DEFAULT_TEMPLATE_PATH,
+    PromptExtractor,
     PromptFormatter,
 )
-from claudit.domain.prompts.prompt_extractor import PromptExtractor
 
 
 def test_tests_claude_code_fast_integration(snapshot):

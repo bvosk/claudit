@@ -9,12 +9,8 @@ import sys
 from contextlib import redirect_stdout, redirect_stderr
 
 from claudit.agents.claude_code import ClaudeCodeStrategy
-from claudit.application.capture_service import CaptureService
-
-from claudit.application.prompt_formatter import (
-    DEFAULT_TEMPLATE_PATH,
-    PromptFormatter,
-)
+from claudit.capture import CaptureService
+from claudit.prompts import DEFAULT_TEMPLATE_PATH, PromptFormatter
 
 
 # Configure centralized logging

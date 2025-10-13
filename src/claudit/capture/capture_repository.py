@@ -6,7 +6,8 @@ from typing import Dict, List, Sequence
 from mitmproxy import http
 
 from claudit.agents.agent_strategy import AgentStrategy
-from claudit.infrastructure.capture.sinks.json_file import JsonFileCaptureSink
+
+from .sinks import JsonFileCaptureSink
 
 
 class CaptureRepository:
