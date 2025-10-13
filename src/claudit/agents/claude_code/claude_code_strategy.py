@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import copy
 import json
 import re
-import copy
 from datetime import datetime
 from typing import Any, Dict, List, Sequence
 
@@ -14,10 +14,11 @@ class ClaudeCodeStrategy(AgentStrategy):
     """Agent strategy encapsulating current Claude Code CLI behaviour."""
 
     name = "claudecode"
+    USER_PROMPT = "hello"
 
     def command(self) -> CommandSpec:
         return CommandSpec(
-            command="claude -p hello --model haiku",
+            command=f"claude -p {self.USER_PROMPT} --model haiku",
             use_shell=True,
             timeout_seconds=15.0,
         )
@@ -45,41 +46,34 @@ class ClaudeCodeStrategy(AgentStrategy):
         if not captured_data:
             raise ValueError("No captured data provided")
 
-        capture = captured_data[0]
-        request_data = capture.get("request", {})
+        target_prompt = self.USER_PROMPT
+        invalid_content = False
 
-        request_content = request_data.get("content", {})
-        if isinstance(request_content, str):
-            try:
-                request_content = json.loads(request_content)
-            except json.JSONDecodeError:
-                request_content = {}
+        for capture in captured_data:
+            request_data = capture.get("request", {})
+            request_content = request_data.get("content", {})
+            request_content = self._ensure_dict_content(request_content)
 
-        if not isinstance(request_content, dict):
+            if request_content is None:
+                invalid_content = True
+                continue
+
+            message_text = self._extract_user_message_text(request_content)
+            if message_text == target_prompt:
+                system_prompts = self._normalize_system_entries(
+                    request_content.get("system", [])
+                )
+                tools = request_content.get("tools", [])
+                if not isinstance(tools, list):
+                    tools = []
+                return Prompt(system=system_prompts, tools=tools)
+
+        if invalid_content:
             raise ValueError("Request content is not valid JSON")
 
-        raw_system = request_content.get("system", [])
-        if not isinstance(raw_system, list):
-            raw_system = [raw_system] if raw_system else []
-
-        system_prompts: List[str] = []
-        for item in raw_system:
-            if isinstance(item, str):
-                system_prompts.append(item)
-            elif isinstance(item, dict):
-                text_value = item.get("text")
-                if isinstance(text_value, str):
-                    system_prompts.append(text_value)
-                else:
-                    system_prompts.append(json.dumps(item))
-            else:
-                system_prompts.append(str(item))
-
-        tools = request_content.get("tools", [])
-        if not isinstance(tools, list):
-            tools = []
-
-        return Prompt(system=system_prompts, tools=tools)
+        raise ValueError(
+            f"Failed to locate captured request containing expected user prompt: {target_prompt}"
+        )
 
     def scrub_prompt(self, prompt: Prompt) -> Prompt:
         """Agent-specific prompt scrubbing for Claude Code."""
@@ -104,3 +98,65 @@ class ClaudeCodeStrategy(AgentStrategy):
         if today:
             return text.replace(f"Today's date: {today}", "Today's date: [date]")
         return text
+
+    def _normalize_system_entries(self, raw_system: Any) -> List[str]:
+        if not isinstance(raw_system, list):
+            raw_system = [raw_system] if raw_system else []
+
+        system_prompts: List[str] = []
+        for item in raw_system:
+            if isinstance(item, str):
+                system_prompts.append(item)
+            elif isinstance(item, dict):
+                text_value = item.get("text")
+                if isinstance(text_value, str):
+                    system_prompts.append(text_value)
+                else:
+                    system_prompts.append(json.dumps(item))
+            else:
+                system_prompts.append(str(item))
+
+        return system_prompts
+
+    def _ensure_dict_content(self, request_content: Any) -> Dict[str, Any] | None:
+        if isinstance(request_content, str):
+            try:
+                request_content = json.loads(request_content)
+            except json.JSONDecodeError:
+                return None
+
+        if request_content is None:
+            return {}
+
+        if not isinstance(request_content, dict):
+            return None
+        return request_content
+
+    def _extract_user_message_text(self, request_content: Dict[str, Any]) -> str | None:
+        messages = request_content.get("messages")
+        if not isinstance(messages, list) or not messages:
+            return None
+
+        first = messages[0]
+        if not isinstance(first, dict):
+            return None
+
+        if first.get("role") != "user":
+            return None
+
+        content = first.get("content")
+        if isinstance(content, str):
+            return content.strip()
+
+        if isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and isinstance(part.get("text"), str):
+                    text = part["text"].strip()
+                    if text:
+                        return text
+                elif isinstance(part, str):
+                    stripped = part.strip()
+                    if stripped:
+                        return stripped
+
+        return None

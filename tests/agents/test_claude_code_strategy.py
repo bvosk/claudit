@@ -10,7 +10,10 @@ class TestClaudeCodeStrategyCommand:
         strategy = ClaudeCodeStrategy()
         spec = strategy.command()
 
-        assert spec.command == "claude -p hello --model haiku"
+        assert (
+            spec.command
+            == f"claude -p {ClaudeCodeStrategy.USER_PROMPT} --model haiku"
+        )
         assert spec.use_shell is True
         assert spec.timeout_seconds == 15.0
 
@@ -36,6 +39,7 @@ class TestClaudeCodeStrategyPromptExtraction:
         self.strategy = ClaudeCodeStrategy()
 
     def test_extract_prompt_parses_dict_payload(self):
+        prompt_text = ClaudeCodeStrategy.USER_PROMPT
         captured_data = [
             {
                 "id": 1,
@@ -43,6 +47,7 @@ class TestClaudeCodeStrategyPromptExtraction:
                     "method": "POST",
                     "url": "https://api.anthropic.com/v1/messages",
                     "content": {
+                        "messages": [{"role": "user", "content": prompt_text}],
                         "system": [
                             {"type": "text", "text": "You are a helpful assistant."}
                         ],
@@ -58,7 +63,9 @@ class TestClaudeCodeStrategyPromptExtraction:
         assert prompt.tools == [{"name": "test_tool", "description": "A test tool"}]
 
     def test_extract_prompt_accepts_json_string_payload(self):
+        prompt_text = ClaudeCodeStrategy.USER_PROMPT
         content_dict = {
+            "messages": [{"role": "user", "content": prompt_text}],
             "system": [{"type": "text", "text": "System prompt"}],
             "tools": [],
         }
@@ -100,10 +107,11 @@ class TestClaudeCodeStrategyPromptExtraction:
             }
         ]
 
-        prompt = self.strategy.extract_prompt(captured_data)
-
-        assert prompt.system == []
-        assert prompt.tools == []
+        with pytest.raises(
+            ValueError,
+            match="Request content is not valid JSON",
+        ):
+            self.strategy.extract_prompt(captured_data)
 
     def test_extract_prompt_converts_non_text_system_entries(self):
         captured_data = [
@@ -115,7 +123,13 @@ class TestClaudeCodeStrategyPromptExtraction:
                             {"type": "text", "text": "Primary"},
                             {"not": "text"},
                             123,
-                        ]
+                        ],
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": ClaudeCodeStrategy.USER_PROMPT,
+                            }
+                        ],
                     }
                 },
             }
@@ -131,7 +145,13 @@ class TestClaudeCodeStrategyPromptExtraction:
         captured_data = [
             {
                 "id": 1,
-                "request": {"content": {"other": "value"}},
+                "request": {
+                    "content": {
+                        "messages": [
+                            {"role": "user", "content": ClaudeCodeStrategy.USER_PROMPT}
+                        ]
+                    }
+                },
             }
         ]
 
@@ -140,23 +160,82 @@ class TestClaudeCodeStrategyPromptExtraction:
         assert prompt.system == []
         assert prompt.tools == []
 
-    def test_extract_prompt_uses_first_capture(self):
+    def test_extract_prompt_matches_request_containing_expected_prompt(self):
         captured_data = [
             {
-                "id": 2,
+                "id": 1,
                 "request": {
-                    "content": {"system": [{"type": "text", "text": "Second"}]}
+                    "url": "https://api.anthropic.com/v1/messages",
+                    "content": {
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [{"type": "text", "text": "ping"}],
+                            }
+                        ],
+                        "system": [{"type": "text", "text": "Ping system"}],
+                    },
                 },
             },
             {
-                "id": 1,
-                "request": {"content": {"system": [{"type": "text", "text": "First"}]}},
+                "id": 2,
+                "request": {
+                    "url": "https://api.anthropic.com/v1/messages",
+                    "content": {
+                        "system": [{"type": "text", "text": "Primary system prompt"}],
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": ClaudeCodeStrategy.USER_PROMPT,
+                                    },
+                                    {"type": "text", "text": "extra"},
+                                ],
+                            }
+                        ],
+                    },
+                },
             },
         ]
 
         prompt = self.strategy.extract_prompt(captured_data)
 
-        assert prompt.system[0] == "Second"
+        assert prompt.system == ["Primary system prompt"]
+
+    def test_extract_prompt_raises_when_expected_prompt_missing(self):
+        prompt_text = ClaudeCodeStrategy.USER_PROMPT
+        captured_data = [
+            {
+                "id": 1,
+                "request": {
+                    "url": "https://api.anthropic.com/v1/messages",
+                    "content": {
+                        "system": [{"type": "text", "text": "Fallback system"}],
+                        "messages": [{"role": "user", "content": "no target prompt"}],
+                    },
+                },
+            },
+            {
+                "id": 2,
+                "request": {
+                    "url": "https://api.anthropic.com/v1/messages?beta=true",
+                    "content": {
+                        "messages": [{"role": "assistant", "content": "irrelevant"}],
+                    },
+                },
+            },
+        ]
+
+        with pytest.raises(
+            ValueError,
+            match=(
+                "Failed to locate captured request containing expected user prompt: "
+                f"{prompt_text}"
+            ),
+        ):
+            self.strategy.extract_prompt(captured_data)
 
     def test_extract_prompt_requires_data(self):
         with pytest.raises(ValueError, match="No captured data provided"):
