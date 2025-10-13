@@ -47,9 +47,7 @@ class TestAgentCommandRunner:
         strategy = _DummyStrategy(version_spec=version_spec)
         runner = AgentCommandRunner(strategy=strategy)
 
-        with patch(
-            "claudit.runtime.agent_command_runner.subprocess.run"
-        ) as mock_run:
+        with patch("claudit.runtime.agent_command_runner.subprocess.run") as mock_run:
             mock_run.side_effect = [
                 subprocess.CompletedProcess(
                     args=version_spec.command,
@@ -85,9 +83,7 @@ class TestAgentCommandRunner:
         strategy = _DummyStrategy(version_spec=None)
         runner = AgentCommandRunner(strategy=strategy)
 
-        with patch(
-            "claudit.runtime.agent_command_runner.subprocess.run"
-        ) as mock_run:
+        with patch("claudit.runtime.agent_command_runner.subprocess.run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(
                 args="echo main",
                 returncode=0,

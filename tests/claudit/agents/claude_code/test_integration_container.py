@@ -27,8 +27,8 @@ def test_claude_code_integration_container(claude_code_version, snapshot):
 
 
 def run_in_container(test_output_dir: Path, claude_code_version="latest"):
+    project_root = Path(__file__).resolve().parents[4]
     try:
-        project_root = Path(__file__).parent.parent
 
         build_cmd = [
             "docker-compose",
@@ -73,7 +73,7 @@ def run_in_container(test_output_dir: Path, claude_code_version="latest"):
         # Clean up any running containers on timeout
         subprocess.run(
             ["docker-compose", "down", "--remove-orphans"],
-            cwd=Path(__file__).parent.parent,
+            cwd=project_root,
             capture_output=True,
         )
         raise AssertionError("Docker container timed out after 5 minutes")
@@ -82,7 +82,7 @@ def run_in_container(test_output_dir: Path, claude_code_version="latest"):
         # Clean up any running containers on error
         subprocess.run(
             ["docker-compose", "down", "--remove-orphans"],
-            cwd=Path(__file__).parent.parent,
+            cwd=project_root,
             capture_output=True,
         )
         raise e
@@ -91,7 +91,7 @@ def run_in_container(test_output_dir: Path, claude_code_version="latest"):
         # Ensure cleanup of any containers
         subprocess.run(
             ["docker-compose", "down", "--remove-orphans"],
-            cwd=Path(__file__).parent.parent,
+            cwd=project_root,
             capture_output=True,
         )
 
