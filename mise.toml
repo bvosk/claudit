@@ -7,7 +7,7 @@ run = "uv sync"
 
 [tasks.run-host]
 description = "Run mitm-capture on the host"
-run = "mitm-capture"
+run = "uv run mitm-capture"
 
 [tasks.run-container-build]
 description = "Run inside docker container"

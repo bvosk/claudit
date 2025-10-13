@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import Dict, List, Sequence
 
@@ -53,6 +54,12 @@ class CaptureRepository:
             self._sink.persist(capture)
         except Exception:
             self._logger.exception("Failed to persist capture via sink")
+        else:
+            try:
+                serialized = json.dumps(capture, indent=2)
+            except TypeError:
+                serialized = str(capture)
+            self._logger.debug("Captured request stored:\n%s", serialized)
 
         return True
 
