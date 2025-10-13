@@ -33,6 +33,16 @@ typecheck              Typecheck code with basedpyright
 
 ## Agent Instructions
 
+### PRDs
+
+You and the human will collaborate on Product Requirement Documents (PRDs). These are informal specifications which provide requirements, context, approach, and implementation notes on the work requested.
+
+PRDs are found in the `prd/` directory. The current PRD is at the root of this directory. Completed PRDs and PRDs which are slated for future work are in the `done` and `todo` directories respectively.
+
+It is VERY IMPORTANT that you update the current PRD while you are working on it. Your updates to the current PRD should reflect planning details as a result of collaborating with the human on this work. Your updates should also include information and progress updates about the work you've completed.
+
+The human may ask you to add details to a `todo` PRD as tasks arise. You may also offer to add tasks which are valuable but unrelated to the current PRD to a new or existing `todo` PRD. NEVER do this without asking for permission from the human first.
+
 ### Tests
 
 - Use `mise test-all` to verify all major changes. If the tests fail, immediately STOP and fix the failing tests.
