@@ -15,10 +15,6 @@ class ClaudeCodeStrategy(AgentStrategy):
 
     name = "claudecode"
 
-    _TOOLS_BLOCK_PATTERN = re.compile(
-        r"^You can use the following tools.*?:", re.MULTILINE
-    )
-
     def command(self) -> CommandSpec:
         return CommandSpec(
             command="claude -p hello --model haiku",
