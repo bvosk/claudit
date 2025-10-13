@@ -27,11 +27,12 @@
 
 ## Decisions
 
-- Keep tests that exercise Claude Code behavior under `tests/agents/`, regardless of integration vs unit scope, so related logic stays co-located.
-- Continue storing syrupy snapshots in the shared `tests/__snapshots__/` directory after files move.
+- Group Claude Code tests (unit and integration) under `tests/claudit/agents/claude_code/` so the namespace mirrors `src/claudit/agents`.
+- Store syrupy snapshots in the standard `__snapshots__` directories adjacent to their test modules.
 - Design the new layout so adding additional agent strategies has an obvious home (`tests/claudit/agents/<agent_name>`).
 
 ## Progress Log
 
 - 2024-07-11: Established goals, constraints, and high level plan; no code changes yet.
 - 2024-07-11: Captured decisions on test placement, snapshot directory usage, and future agent namespace expectations.
+- 2024-07-11: Reorganized tests under `tests/claudit/`, extracted Claude Code fixtures, removed command-spec assertions, and `mise test-all` passing.
