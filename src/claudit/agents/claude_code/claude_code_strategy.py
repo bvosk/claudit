@@ -58,8 +58,8 @@ class ClaudeCodeStrategy(AgentStrategy):
                 invalid_content = True
                 continue
 
-            message_text = self._extract_user_message_text(request_content)
-            if message_text == target_prompt:
+            message_texts = self._user_message_texts(request_content)
+            if any(text == target_prompt for text in message_texts):
                 system_prompts = self._normalize_system_entries(
                     request_content.get("system", [])
                 )
@@ -132,31 +132,34 @@ class ClaudeCodeStrategy(AgentStrategy):
             return None
         return request_content
 
-    def _extract_user_message_text(self, request_content: Dict[str, Any]) -> str | None:
+    def _user_message_texts(self, request_content: Dict[str, Any]) -> List[str]:
         messages = request_content.get("messages")
         if not isinstance(messages, list) or not messages:
-            return None
+            return []
 
         first = messages[0]
         if not isinstance(first, dict):
-            return None
+            return []
 
         if first.get("role") != "user":
-            return None
+            return []
 
         content = first.get("content")
+        texts: List[str] = []
         if isinstance(content, str):
-            return content.strip()
+            stripped = content.strip()
+            if stripped:
+                texts.append(stripped)
 
         if isinstance(content, list):
             for part in content:
                 if isinstance(part, dict) and isinstance(part.get("text"), str):
                     text = part["text"].strip()
                     if text:
-                        return text
+                        texts.append(text)
                 elif isinstance(part, str):
                     stripped = part.strip()
                     if stripped:
-                        return stripped
+                        texts.append(stripped)
 
-        return None
+        return texts
