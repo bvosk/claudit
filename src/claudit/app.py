@@ -11,7 +11,10 @@ from contextlib import redirect_stdout, redirect_stderr
 from claudit.agents.claude_code import ClaudeCodeStrategy
 from claudit.application.capture_service import CaptureService
 
-from claudit.prompt_formatter import render_prompt_markdown
+from claudit.application.prompt_formatter import (
+    DEFAULT_TEMPLATE_PATH,
+    PromptFormatter,
+)
 
 
 # Configure centralized logging
@@ -63,12 +66,13 @@ async def async_main():
     signal.signal(signal.SIGTERM, signal_handler)
     stdout_capture = io.StringIO()
     stderr_capture = io.StringIO()
+    prompt_formatter = PromptFormatter(DEFAULT_TEMPLATE_PATH)
 
     with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
         workflow_service = CaptureService.build(
             strategy=strategy,
             content_scrubber=lambda p: p,
-            prompt_renderer=render_prompt_markdown,
+            prompt_renderer=prompt_formatter.render,
         )
         result = await workflow_service.run()
 

@@ -118,12 +118,11 @@ Always prefer tasks to ad‑hoc commands so CI/local parity is maintained.
 │   │   │   ├── repository.py
 │   │   │   └── sinks/{json_file,in_memory}.py
 │   ├── domain/prompts/{prompt_extractor.py,prompt_writer.py}
-│   ├── capture_addon.py              # mitmproxy addon hook
-│   ├── prompt_formatter.py           # Jinja2 renderer
-│   └── models.py                     # Config + capture models
-├── templates/claudecode.md           # Markdown template
-├── captures/                         # Latest JSON capture
-└── prompts/                          # Rendered Markdown prompt
+│   ├── application/prompt_formatter/  # Markdown renderer + default template
+│   ├── capture_addon.py               # mitmproxy addon hook
+│   └── models.py                      # Config + capture models
+├── captures/                          # Latest JSON capture
+└── prompts/                           # Rendered Markdown prompt
 ```
 
 ---
@@ -137,7 +136,7 @@ Always prefer tasks to ad‑hoc commands so CI/local parity is maintained.
    - Collect qualifying flows through `CaptureAddon` → `CaptureRepository`.
    - Extract domain `Prompt` via `PromptExtractor` & strategy logic.
    - Scrub prompt (`strategy.scrub_prompt()`).
-   - Render Markdown (`prompt_formatter.render_prompt_markdown`).
+   - Render Markdown (`PromptFormatter.render`).
    - Persist artefact (`PromptWriter`).
 2. `MitmproxyRunner` manages:
    - Port sanity / availability
@@ -179,15 +178,15 @@ You can implement custom redaction (IDs, timestamps, emails) in `scrub_prompt()`
 
 ## Template Rendering
 
-Jinja2 template: `templates/claudecode.md`
+Jinja2 template: `src/claudit/application/prompt_formatter/template.md`
 
 Variables provided:
 - `system`: list of `{ type: text, text: ... }`
 - `tools`: list of raw tool objects (rendered with JSON filter in template)
 
 To introduce a new template:
-- Add file to `templates/`
-- Provide a custom renderer or extend `prompt_formatter.py`
+- Add a file alongside `template.md`
+- Instantiate `PromptFormatter` with the new template path
 
 ---
 
@@ -306,12 +305,17 @@ docker build \
 ```python
 from claudit.application.capture_service import CaptureService
 from claudit.agents.my_agent.my_agent_strategy import MyAgentStrategy
-from claudit.prompt_formatter import render_prompt_markdown
+from claudit.application.prompt_formatter import (
+    DEFAULT_TEMPLATE_PATH,
+    PromptFormatter,
+)
+
+formatter = PromptFormatter(DEFAULT_TEMPLATE_PATH)
 
 service = CaptureService.build(
     strategy=MyAgentStrategy(),
     content_scrubber=lambda p: p,
-    prompt_renderer=render_prompt_markdown,
+    prompt_renderer=formatter.render,
 )
 # await service.run() in an async context
 ```

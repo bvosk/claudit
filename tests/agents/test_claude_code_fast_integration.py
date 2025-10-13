@@ -2,9 +2,11 @@ import json
 from pathlib import Path
 
 from claudit.agents.claude_code import ClaudeCodeStrategy
+from claudit.application.prompt_formatter import (
+    DEFAULT_TEMPLATE_PATH,
+    PromptFormatter,
+)
 from claudit.domain.prompts.prompt_extractor import PromptExtractor
-
-from claudit.prompt_formatter import render_prompt_markdown
 
 
 def test_tests_claude_code_fast_integration(snapshot):
@@ -22,6 +24,7 @@ def test_tests_claude_code_fast_integration(snapshot):
 
     prompt = extractor.extract([raw_record])
     scrubbed = strategy.scrub_prompt(prompt)
-    rendered = render_prompt_markdown(scrubbed)
+    formatter = PromptFormatter(DEFAULT_TEMPLATE_PATH)
+    rendered = formatter.render(scrubbed)
 
     assert rendered == snapshot(name="claude_prompt_fast")
