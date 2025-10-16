@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     python3-venv \
+    gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv (https://docs.astral.sh/uv/) and place on PATH
