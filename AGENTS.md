@@ -57,6 +57,10 @@ The human may ask you to add details to a `todo` PRD as tasks arise. You may als
 - The `black` formatter is used to format all Python code
 - Filenames should always match up with the classes they define. For example the class `AgentStrategy` should be in a file called `agent_strategy.py`
 
+### Git
+
+You ONLY do read-only git operation. You will NEVER make commits or push to remotes unless the human explicitly requests it.
+
 ### Github Actions
 
 You can use the `gh` tool to interact with the `claudit` Github repository.
