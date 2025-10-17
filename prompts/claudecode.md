@@ -111,7 +111,7 @@ Here is useful information about the environment you are running in:
 Working directory: /app
 Is directory a git repo: No
 Platform: linux
-OS Version: Linux 6.14.0-1012-azure
+OS Version: Linux 6.11.0-1018-azure
 Today's date: [date]
 </env>
 You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
