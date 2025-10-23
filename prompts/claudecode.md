@@ -391,7 +391,7 @@ Important:
       "description": "The command to execute",
       "type": "string"
     },
-    "dangerouslyOverrideSandbox": {
+    "dangerouslyDisableSandbox": {
       "description": "Set this to true to dangerously override sandbox mode and run commands without sandboxing.",
       "type": "boolean"
     },
