@@ -110,11 +110,7 @@ assistant: [Uses the Task tool with subagent_type=Explore]
 
 Here is useful information about the environment you are running in:
 <env>
-Working directory: /app
-Is directory a git repo: No
-Platform: linux
-OS Version: Linux 6.11.0-1018-azure
-Today's date: [date]
+[This has been scrubbed to ensure clean diffs across different environments]
 </env>
 You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
 

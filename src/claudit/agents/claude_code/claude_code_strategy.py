@@ -66,9 +66,14 @@ class ClaudeCodeStrategy(AgentStrategy):
     def _scrub_text_content(self, text: str) -> str:
         if not text:
             return text
-        today = datetime.now().strftime("%Y-%m-%d")
-        if today:
-            return text.replace(f"Today's date: {today}", "Today's date: [date]")
+
+        text = re.sub(
+            r"<env>.*?</env>",
+            "<env>\n[This has been scrubbed to ensure clean diffs across different environments]\n</env>",
+            text,
+            flags=re.DOTALL,
+        )
+
         return text
 
     def _normalize_system_entries(self, raw_system: Any) -> List[str]:
