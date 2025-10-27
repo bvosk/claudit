@@ -155,11 +155,7 @@
   
   Here is useful information about the environment you are running in:
   <env>
-  Working directory: /app
-  Is directory a git repo: No
-  Platform: linux
-  OS Version: Linux 6.15.11-orbstack-00539-g9885ebd8e3f4
-  Today's date: [date]
+  [This has been scrubbed to ensure clean diffs across different environments]
   </env>
   You are powered by the model named Claude 3.5 Haiku. The exact model ID is claude-3-5-haiku-20241022.
   
