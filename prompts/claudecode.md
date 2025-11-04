@@ -508,7 +508,7 @@ A powerful search tool built on ripgrep
       "type": "boolean"
     },
     "-n": {
-      "description": "Show line numbers in output (rg -n). Requires output_mode: \"content\", ignored otherwise.",
+      "description": "Show line numbers in output (rg -n). Requires output_mode: \"content\", ignored otherwise. Defaults to true.",
       "type": "boolean"
     },
     "glob": {
@@ -516,12 +516,16 @@ A powerful search tool built on ripgrep
       "type": "string"
     },
     "head_limit": {
-      "description": "Limit output to first N lines/entries, equivalent to \"| head -N\". Works across all output modes: content (limits output lines), files_with_matches (limits file paths), count (limits count entries). When unspecified, shows all results from ripgrep.",
+      "description": "Limit output to first N lines/entries, equivalent to \"| head -N\". Works across all output modes: content (limits output lines), files_with_matches (limits file paths), count (limits count entries). Defaults based on \"cap\" experiment value: 0 (unlimited), 20, or 100.",
       "type": "number"
     },
     "multiline": {
       "description": "Enable multiline mode where . matches newlines and patterns can span lines (rg -U --multiline-dotall). Default: false.",
       "type": "boolean"
+    },
+    "offset": {
+      "description": "Skip first N lines/entries before applying head_limit, equivalent to \"| tail -n +N | head -N\". Works across all output modes. Defaults to 0.",
+      "type": "number"
     },
     "output_mode": {
       "description": "Output mode: \"content\" shows matching lines (supports -A/-B/-C context, -n line numbers, head_limit), \"files_with_matches\" shows file paths (supports head_limit), \"count\" shows match counts (supports head_limit). Defaults to \"files_with_matches\".",
