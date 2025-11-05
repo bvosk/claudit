@@ -108,7 +108,6 @@ assistant: [Uses the Task tool with subagent_type=Explore]
 
 
 
-
 Here is useful information about the environment you are running in:
 <env>
 [This has been scrubbed to ensure clean diffs across different environments]
