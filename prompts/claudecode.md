@@ -1242,13 +1242,13 @@ Important:
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "command": {
+    "skill": {
       "description": "The skill name (no arguments). E.g., \"pdf\" or \"xlsx\"",
       "type": "string"
     }
   },
   "required": [
-    "command"
+    "skill"
   ],
   "type": "object"
 }
