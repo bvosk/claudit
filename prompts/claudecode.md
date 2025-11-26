@@ -613,7 +613,7 @@ Before using this tool, ensure your plan is clear and unambiguous. If there are 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {},
   "type": "object"
 }
