@@ -136,7 +136,7 @@ Here is useful information about the environment you are running in:
 You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
 
 <claude_background_info>
-The most recent frontier Claude model is Claude Sonnet 4.5 (model ID: 'claude-sonnet-4-5-20250929').
+The most recent frontier Claude model is Claude Opus 4.5 (model ID: 'claude-opus-4-5-20251101').
 </claude_background_info>
 
 
@@ -1128,7 +1128,7 @@ Usage notes:
   - Web search is only available in the US
 
 IMPORTANT - Use the correct year in search queries:
-  - Today's date is 2025-12-03. You MUST use this year when searching for recent information, documentation, or current events.
+  - Today's date is 2025-12-04. You MUST use this year when searching for recent information, documentation, or current events.
   - Example: If today is 2025-07-15 and the user asks for "latest React docs", search for "React documentation 2025", NOT "React documentation 2024"
 
 ```
