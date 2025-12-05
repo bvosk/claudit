@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import json
 import re
-from datetime import datetime
 from typing import Any, Dict, List, Sequence
 
 from claudit.agents.agent_strategy import AgentStrategy, CommandSpec
@@ -72,6 +71,13 @@ class ClaudeCodeStrategy(AgentStrategy):
             "<env>\n[This has been scrubbed to ensure clean diffs across different environments]\n</env>",
             text,
             flags=re.DOTALL,
+        )
+
+        text = re.sub(
+            r"(Today's date(?: is|:) )\d{4}-\d{2}-\d{2}",
+            r"\1[SCRUBBED DATE]",
+            text,
+            flags=re.IGNORECASE,
         )
 
         return text
