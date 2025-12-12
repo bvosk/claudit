@@ -190,7 +190,7 @@ When NOT to use the Task tool:
 Usage notes:
 - Launch multiple agents concurrently whenever possible, to maximize performance; to do that, use a single message with multiple tool uses
 - When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user with a concise summary of the result.
-- You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will need to use AgentOutputTool to retrieve its results once it's done. You can continue to work while background agents run - When you need their results to continue you can use AgentOutputTool in blocking mode to pause and wait for their results.
+- You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will need to use TaskOutput to retrieve its results once it's done. You can continue to work while background agents run - When you need their results to continue you can use TaskOutput in blocking mode to pause and wait for their results.
 - Agents can be resumed using the `resume` parameter by passing the agent ID from a previous invocation. When resumed, the agent continues with its full previous context preserved. When NOT resuming, each invocation starts fresh and you should provide a detailed task description with all necessary context.
 - When the agent is done, it will return a single message back to you along with its agent ID. You can use this ID to resume the agent later if needed for follow-up work.
 - Provide clear, detailed prompts so the agent can work autonomously and return exactly the information you need.
@@ -266,7 +266,7 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
       "type": "string"
     },
     "run_in_background": {
-      "description": "Set to true to run this agent in the background. Use AgentOutputTool to read the output later.",
+      "description": "Set to true to run this agent in the background. Use TaskOutput to read the output later.",
       "type": "boolean"
     },
     "subagent_type": {
@@ -284,15 +284,18 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
 ```
 
 
-## AgentOutputTool
+## TaskOutput
 
 **Description:**
 
 ```
-- Retrieves output from a completed async agent task by agentId
-- Provide a single agentId
-- If you want to check on the agent's progress call AgentOutputTool with block=false to get an immediate update on the agent's status
-- If you run out of things to do and the agent is still running - call AgentOutputTool with block=true to idle and wait for the agent's result (do not use block=true unless you completely run out of things to do as it will waste time)
+- Retrieves output from a running or completed task (background shell, agent, or remote session)
+- Takes a task_id parameter identifying the task
+- Returns the task output along with status information
+- Use block=true (default) to wait for task completion
+- Use block=false for non-blocking check of current status
+- Task IDs can be found using the /tasks command
+- Works with all task types: background shells, async agents, and remote sessions
 ```
 
 **Schema:**
@@ -301,25 +304,25 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
   "properties": {
-    "agentId": {
-      "description": "The agent ID to retrieve results for",
-      "type": "string"
-    },
     "block": {
       "default": true,
-      "description": "Whether to block until results are ready",
+      "description": "Whether to wait for completion",
       "type": "boolean"
     },
-    "wait_up_to": {
-      "default": 150,
-      "description": "Maximum time to wait in seconds",
-      "maximum": 300,
+    "task_id": {
+      "description": "The task ID to get output from",
+      "type": "string"
+    },
+    "timeout": {
+      "default": 30000,
+      "description": "Max wait time in ms",
+      "maximum": 600000,
       "minimum": 0,
       "type": "number"
     }
   },
   "required": [
-    "agentId"
+    "task_id"
   ],
   "type": "object"
 }
@@ -486,7 +489,7 @@ Important:
       "type": "string"
     },
     "run_in_background": {
-      "description": "Set to true to run this command in the background. Use BashOutput to read the output later.",
+      "description": "Set to true to run this command in the background. Use TaskOutput to read the output later.",
       "type": "boolean"
     },
     "timeout": {
@@ -587,7 +590,7 @@ A powerful search tool built on ripgrep
       "type": "string"
     },
     "head_limit": {
-      "description": "Limit output to first N lines/entries, equivalent to \"| head -N\". Works across all output modes: content (limits output lines), files_with_matches (limits file paths), count (limits count entries). Defaults based on \"cap\" experiment value: 0 (unlimited), 20, or 100.",
+      "description": "Limit output to first N lines/entries, equivalent to \"| head -N\". Works across all output modes: content (limits output lines), files_with_matches (limits file paths), count (limits count entries). Defaults to 0 (unlimited).",
       "type": "number"
     },
     "multiline": {
@@ -1220,45 +1223,6 @@ IMPORTANT - Use the correct year in search queries:
   },
   "required": [
     "query"
-  ],
-  "type": "object"
-}
-```
-
-
-## BashOutput
-
-**Description:**
-
-```
-
-- Retrieves output from a running or completed background bash shell
-- Takes a bash_id parameter identifying the shell
-- Always returns only new output since the last check
-- Returns stdout and stderr output along with shell status
-- Supports optional regex filtering to show only lines matching a pattern
-- Use this tool when you need to monitor or check the output of a long-running shell
-- Shell IDs can be found using the /tasks command
-
-```
-
-**Schema:**
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
-  "properties": {
-    "bash_id": {
-      "description": "The ID of the background shell to retrieve output from",
-      "type": "string"
-    },
-    "filter": {
-      "description": "Optional regular expression to filter the output lines. Only lines matching this regex will be included in the result. Any lines that do not match will no longer be available to read.",
-      "type": "string"
-    }
-  },
-  "required": [
-    "bash_id"
   ],
   "type": "object"
 }
