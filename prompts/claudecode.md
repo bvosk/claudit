@@ -420,12 +420,7 @@ Git Safety Protocol:
    Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
    - Run git status after the commit completes to verify success.
    Note: git status depends on the commit completing, so run it sequentially after the commit.
-4. If the commit fails due to pre-commit hook:
-   - If hook REJECTED the commit (non-zero exit): Fix the issue, then create a NEW commit (NEVER amend)
-   - If commit SUCCEEDED but hook auto-modified files (e.g., formatting): You MAY amend to include them, but ONLY if:
-     * HEAD was created by you (verify: git log -1 --format='%an %ae')
-     * Commit is not pushed (verify: git status shows "Your branch is ahead")
-   - When in doubt, create a NEW commit instead of amending
+4. If the commit fails due to pre-commit hook, fix the issue and create a NEW commit (see amend rules above)
 
 Important notes:
 - NEVER run additional commands to read or explore code, besides git bash commands
@@ -679,16 +674,7 @@ Before using this tool, ensure your plan is clear and unambiguous. If there are 
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": true,
-  "properties": {
-    "launchSwarm": {
-      "description": "Whether to launch a swarm to implement the plan",
-      "type": "boolean"
-    },
-    "teammateCount": {
-      "description": "Number of teammates to spawn in the swarm",
-      "type": "number"
-    }
-  },
+  "properties": {},
   "type": "object"
 }
 ```
