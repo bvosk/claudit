@@ -244,6 +244,12 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
       "description": "A short (3-5 word) description of the task",
       "type": "string"
     },
+    "max_turns": {
+      "description": "Maximum number of agentic turns (API round-trips) before stopping. Used internally for warmup.",
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
     "model": {
       "description": "Optional model to use for this agent. If not specified, inherits from parent. Prefer haiku for quick, straightforward tasks to minimize cost and latency.",
       "enum": [
