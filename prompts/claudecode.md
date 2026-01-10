@@ -361,7 +361,7 @@ Before executing the command, please follow these steps:
 Usage notes:
   - The command argument is required.
   - You can specify an optional timeout in milliseconds (up to 600000ms / 10 minutes). If not specified, commands will timeout after 120000ms (2 minutes).
-  - It is very helpful if you write a clear, concise description of what this command does in 5-10 words.
+  - It is very helpful if you write a clear, concise description of what this command does. For simple commands, keep it brief (5-10 words). For complex commands (piped commands, obscure flags, or anything hard to understand at a glance), add enough context to clarify what it does.
   - If the output exceeds 30000 characters, output will be truncated before being returned to you.
   - You can use the `run_in_background` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes. You do not need to use '&' at the end of the command when using this parameter.
   
@@ -403,7 +403,7 @@ Git Safety Protocol:
 - NEVER commit changes unless the user explicitly asks you to. It is VERY IMPORTANT to only commit when explicitly asked, otherwise the user will feel that you are being too proactive.
 
 1. You can call multiple tools in a single response. When multiple independent pieces of information are requested and all commands are likely to succeed, run multiple tool calls in parallel for optimal performance. run the following bash commands in parallel, each using the Bash tool:
-  - Run a git status command to see all untracked files.
+  - Run a git status command to see all untracked files. IMPORTANT: Never use the -uall flag as it can cause memory issues on large repos.
   - Run a git diff command to see both staged and unstaged changes that will be committed.
   - Run a git log command to see recent commit messages, so that you can follow this repository's commit message style.
 2. Analyze all staged changes (both previously staged and newly added) and draft a commit message:
@@ -441,7 +441,7 @@ Use the gh command via the Bash tool for ALL GitHub-related tasks including work
 IMPORTANT: When the user asks you to create a pull request, follow these steps carefully:
 
 1. You can call multiple tools in a single response. When multiple independent pieces of information are requested and all commands are likely to succeed, run multiple tool calls in parallel for optimal performance. run the following bash commands in parallel using the Bash tool, in order to understand the current state of the branch since it diverged from the main branch:
-   - Run a git status command to see all untracked files
+   - Run a git status command to see all untracked files (never use -uall flag)
    - Run a git diff command to see both staged and unstaged changes that will be committed
    - Check if the current branch tracks a remote branch and is up to date with the remote, so you know if you need to push to the remote
    - Run a git log command and `git diff [base-branch]...HEAD` to understand the full commit history for the current branch (from the time it diverged from the base branch)
@@ -477,6 +477,23 @@ Important:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "_simulatedSedEdit": {
+      "additionalProperties": false,
+      "description": "Internal: pre-computed sed edit result from preview",
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "newContent": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "filePath",
+        "newContent"
+      ],
+      "type": "object"
+    },
     "command": {
       "description": "The command to execute",
       "type": "string"
@@ -486,7 +503,7 @@ Important:
       "type": "boolean"
     },
     "description": {
-      "description": "Clear, concise description of what this command does in 5-10 words, in active voice. Examples:\nInput: ls\nOutput: List files in current directory\n\nInput: git status\nOutput: Show working tree status\n\nInput: npm install\nOutput: Install package dependencies\n\nInput: mkdir foo\nOutput: Create directory \u0027foo\u0027",
+      "description": "Clear, concise description of what this command does in active voice. Never use words like \"complex\" or \"risk\" in the description - just describe what it does.\n\nFor simple commands (git, npm, standard CLI tools), keep it brief (5-10 words):\n- ls \u2192 \"List files in current directory\"\n- git status \u2192 \"Show working tree status\"\n- npm install \u2192 \"Install package dependencies\"\n\nFor commands that are harder to parse at a glance (piped commands, obscure flags, etc.), add enough context to clarify what it does:\n- find . -name \"*.tmp\" -exec rm {} \\; \u2192 \"Find and delete all .tmp files recursively\"\n- git reset --hard origin/main \u2192 \"Discard all local changes and match remote main\"\n- curl -s url | jq \u0027.data[]\u0027 \u2192 \"Fetch JSON from URL and extract data array elements\"",
       "type": "string"
     },
     "run_in_background": {
@@ -1286,6 +1303,17 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
       "description": "User answers collected by the permission component",
       "propertyNames": {
         "type": "string"
+      },
+      "type": "object"
+    },
+    "metadata": {
+      "additionalProperties": false,
+      "description": "Optional metadata for tracking and analytics purposes. Not displayed to user.",
+      "properties": {
+        "source": {
+          "description": "Optional identifier for the source of this question (e.g., \"remember\" for /remember command). Used for analytics tracking.",
+          "type": "string"
+        }
       },
       "type": "object"
     },
