@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.15.ca2; cc_entrypoint=sdk-cli
+x-anthropic-billing-header: cc_version=2.1.17.eee; cc_entrypoint=sdk-cli
 ```
 
 
@@ -256,6 +256,18 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
       "maximum": 9007199254740991,
       "type": "integer"
     },
+    "mode": {
+      "description": "Permission mode for spawned teammate (e.g., \"plan\" to require plan approval).",
+      "enum": [
+        "acceptEdits",
+        "bypassPermissions",
+        "default",
+        "delegate",
+        "dontAsk",
+        "plan"
+      ],
+      "type": "string"
+    },
     "model": {
       "description": "Optional model to use for this agent. If not specified, inherits from parent. Prefer haiku for quick, straightforward tasks to minimize cost and latency.",
       "enum": [
@@ -263,6 +275,10 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
         "opus",
         "haiku"
       ],
+      "type": "string"
+    },
+    "name": {
+      "description": "Name for the spawned agent",
       "type": "string"
     },
     "prompt": {
@@ -279,6 +295,10 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
     },
     "subagent_type": {
       "description": "The type of specialized agent to use for this task",
+      "type": "string"
+    },
+    "team_name": {
+      "description": "Team name for spawning. Uses current team context if omitted.",
       "type": "string"
     }
   },
@@ -427,6 +447,7 @@ Important notes:
 - NEVER use the TodoWrite or Task tools
 - DO NOT push to the remote repository unless the user explicitly asks you to do so
 - IMPORTANT: Never use git commands with the -i flag (like git rebase -i or git add -i) since they require interactive input which is not supported.
+- IMPORTANT: Do not use --no-edit with git rebase commands, as the --no-edit flag is not a valid option for git rebase.
 - If there are no changes to commit (i.e., no untracked files and no modifications), do not create an empty commit
 - In order to ensure good formatting, ALWAYS pass the commit message via a HEREDOC, a la this example:
 <example>
@@ -714,6 +735,10 @@ Ensure your plan is complete and unambiguous:
       },
       "type": "array"
     },
+    "launchSwarm": {
+      "description": "Whether to launch a swarm to implement the plan",
+      "type": "boolean"
+    },
     "pushToRemote": {
       "description": "Whether to push the plan to a remote Claude.ai session",
       "type": "boolean"
@@ -729,6 +754,10 @@ Ensure your plan is complete and unambiguous:
     "remoteSessionUrl": {
       "description": "The remote session URL if pushed to remote",
       "type": "string"
+    },
+    "teammateCount": {
+      "description": "Number of teammates to spawn in the swarm",
+      "type": "number"
     }
   },
   "type": "object"
