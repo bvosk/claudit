@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.17.eee; cc_entrypoint=sdk-cli
+x-anthropic-billing-header: cc_version=2.1.19.b18; cc_entrypoint=sdk-cli
 ```
 
 
@@ -246,6 +246,13 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "allowed_tools": {
+      "description": "Tools to grant this agent. User will be prompted to approve if not already allowed. Example: [\"Bash(git commit*)\", \"Read\"]",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "description": {
       "description": "A short (3-5 word) description of the task",
       "type": "string"
@@ -256,18 +263,6 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
       "maximum": 9007199254740991,
       "type": "integer"
     },
-    "mode": {
-      "description": "Permission mode for spawned teammate (e.g., \"plan\" to require plan approval).",
-      "enum": [
-        "acceptEdits",
-        "bypassPermissions",
-        "default",
-        "delegate",
-        "dontAsk",
-        "plan"
-      ],
-      "type": "string"
-    },
     "model": {
       "description": "Optional model to use for this agent. If not specified, inherits from parent. Prefer haiku for quick, straightforward tasks to minimize cost and latency.",
       "enum": [
@@ -275,10 +270,6 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
         "opus",
         "haiku"
       ],
-      "type": "string"
-    },
-    "name": {
-      "description": "Name for the spawned agent",
       "type": "string"
     },
     "prompt": {
@@ -295,10 +286,6 @@ assistant: "I'm going to use the Task tool to launch the greeting-responder agen
     },
     "subagent_type": {
       "description": "The type of specialized agent to use for this task",
-      "type": "string"
-    },
-    "team_name": {
-      "description": "Team name for spawning. Uses current team context if omitted.",
       "type": "string"
     }
   },
@@ -735,10 +722,6 @@ Ensure your plan is complete and unambiguous:
       },
       "type": "array"
     },
-    "launchSwarm": {
-      "description": "Whether to launch a swarm to implement the plan",
-      "type": "boolean"
-    },
     "pushToRemote": {
       "description": "Whether to push the plan to a remote Claude.ai session",
       "type": "boolean"
@@ -754,10 +737,6 @@ Ensure your plan is complete and unambiguous:
     "remoteSessionUrl": {
       "description": "The remote session URL if pushed to remote",
       "type": "string"
-    },
-    "teammateCount": {
-      "description": "Number of teammates to spawn in the swarm",
-      "type": "number"
     }
   },
   "type": "object"
@@ -1312,17 +1291,16 @@ IMPORTANT - Use the correct year in search queries:
 ```
 
 
-## KillShell
+## TaskStop
 
 **Description:**
 
 ```
 
-- Kills a running background bash shell by its ID
-- Takes a shell_id parameter identifying the shell to kill
-- Returns a success or failure status 
-- Use this tool when you need to terminate a long-running shell
-- Shell IDs can be found using the /tasks command
+- Stops a running background task by its ID
+- Takes a task_id parameter identifying the task to stop
+- Returns a success or failure status
+- Use this tool when you need to terminate a long-running task
 
 ```
 
@@ -1333,13 +1311,14 @@ IMPORTANT - Use the correct year in search queries:
   "additionalProperties": false,
   "properties": {
     "shell_id": {
-      "description": "The ID of the background shell to kill",
+      "description": "Deprecated: use task_id instead",
+      "type": "string"
+    },
+    "task_id": {
+      "description": "The ID of the background task to stop",
       "type": "string"
     }
   },
-  "required": [
-    "shell_id"
-  ],
   "type": "object"
 }
 ```
@@ -1483,7 +1462,7 @@ Important:
 - When a skill is relevant, you must invoke this tool IMMEDIATELY as your first action
 - NEVER just announce or mention a skill in your text response without actually calling this tool
 - This is a BLOCKING REQUIREMENT: invoke the relevant Skill tool BEFORE generating any other response about the task
-- Only use skills listed in "Available skills" below
+- Skills listed below are available for invocation
 - Do not invoke a skill that is already running
 - Do not use this tool for built-in CLI commands (like /help, /clear, etc.)
 - If you see a <command-name> tag in the current conversation turn (e.g., <command-name>/commit</command-name>), the skill has ALREADY been loaded and its instructions follow in the next message. Do NOT call this tool - just follow the skill instructions directly.
