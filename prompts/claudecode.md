@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.25.525; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.27.84b; cc_entrypoint=sdk-cli;
 ```
 
 
