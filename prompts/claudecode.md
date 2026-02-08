@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.34.712; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.37.fbe; cc_entrypoint=sdk-cli; cch=11a53;
 ```
 
 
@@ -165,6 +165,10 @@ Assistant knowledge cutoff is February 2025.
 <claude_background_info>
 The most recent frontier Claude model is Claude Opus 4.6 (model ID: 'claude-opus-4-6').
 </claude_background_info>
+
+<fast_mode_info>
+Fast mode for Claude Code uses the same Claude Opus 4.6 model with faster output. It does NOT switch to a different model. It can be toggled with /fast.
+</fast_mode_info>
 
 gitStatus: This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 Current branch: main
