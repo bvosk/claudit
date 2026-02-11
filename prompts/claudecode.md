@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.38.c00; cc_entrypoint=sdk-cli; cch=ed698;
+x-anthropic-billing-header: cc_version=2.1.39.c39; cc_entrypoint=sdk-cli; cch=10e04;
 ```
 
 
@@ -523,23 +523,6 @@ Important:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
-    "_simulatedSedEdit": {
-      "additionalProperties": false,
-      "description": "Internal: pre-computed sed edit result from preview",
-      "properties": {
-        "filePath": {
-          "type": "string"
-        },
-        "newContent": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "filePath",
-        "newContent"
-      ],
-      "type": "object"
-    },
     "command": {
       "description": "The command to execute",
       "type": "string"
