@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.44.dad; cc_entrypoint=sdk-cli; cch=cf526;
+x-anthropic-billing-header: cc_version=2.1.45.3c3; cc_entrypoint=sdk-cli; cch=27ad1;
 ```
 
 
@@ -1376,6 +1376,27 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "annotations": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "markdown": {
+            "description": "The markdown preview content of the selected option, if the question used previews.",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Free-text notes the user added to their selection.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "description": "Optional per-question annotations from the user (e.g., notes on preview selections). Keyed by question text.",
+      "propertyNames": {
+        "type": "string"
+      },
+      "type": "object"
+    },
     "answers": {
       "additionalProperties": {
         "type": "string"
@@ -1422,6 +1443,10 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
                 },
                 "label": {
                   "description": "The display text for this option that the user will see and select. Should be concise (1-5 words) and clearly describe the choice.",
+                  "type": "string"
+                },
+                "markdown": {
+                  "description": "Optional preview content shown in a monospace box when this option is focused. Use for ASCII mockups, code snippets, or diagrams that help users visually compare options. Supports multi-line text with newlines.",
                   "type": "string"
                 }
               },
