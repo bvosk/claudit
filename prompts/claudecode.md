@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.53.495; cc_entrypoint=sdk-cli; cch=07d58;
+x-anthropic-billing-header: cc_version=2.1.58.4c8; cc_entrypoint=sdk-cli; cch=83f9e;
 ```
 
 
@@ -114,7 +114,7 @@ You have been invoked in the following environment:
   - Is a git repository: true
  - Platform: linux
  - Shell: unknown
- - OS Version: Linux 6.11.0-1018-azure
+ - OS Version: Linux 6.14.0-1017-azure
  - You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
  - 
 
