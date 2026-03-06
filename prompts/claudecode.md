@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.68.1fc; cc_entrypoint=sdk-cli; cch=f3f5b;
+x-anthropic-billing-header: cc_version=2.1.69.109; cc_entrypoint=sdk-cli; cch=ac891;
 ```
 
 
@@ -107,6 +107,7 @@ As you work, consult your memory files to build on previous experience.
 ## Explicit user requests:
 - When the user asks you to remember something across sessions (e.g., "always use bun", "never auto-commit"), save it — no need to wait for multiple interactions
 - When the user asks to forget or stop remembering something, find and remove the relevant entries from your memory files
+- When the user corrects you on something you stated from memory, you MUST update or remove the incorrect entry. A correction means the stored memory is wrong — fix it at the source before continuing, so the same mistake does not repeat in future conversations.
 
 
 # Environment
@@ -177,7 +178,6 @@ Usage notes:
 - Agents can be resumed using the `resume` parameter by passing the agent ID from a previous invocation. When resumed, the agent continues with its full previous context preserved. When NOT resuming, each invocation starts fresh and you should provide a detailed task description with all necessary context.
 - When the agent is done, it will return a single message back to you along with its agent ID. You can use this ID to resume the agent later if needed for follow-up work.
 - Provide clear, detailed prompts so the agent can work autonomously and return exactly the information you need.
-- Agents with "access to current context" can see the full conversation history before the tool call. When using these agents, you can write concise prompts that reference earlier context (e.g., "investigate the error discussed above") instead of repeating information. The agent will receive all prior messages and understand the context.
 - The agent's outputs should generally be trusted
 - Clearly tell the agent whether you expect it to write code or just to do research (search, file reads, web fetches, etc.), since it is not aware of the user's intent
 - If the agent description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. Use your judgement.
@@ -236,21 +236,6 @@ assistant: "I'm going to use the Agent tool to launch the greeting-responder age
       "description": "Isolation mode. \"worktree\" creates a temporary git worktree so the agent works on an isolated copy of the repo.",
       "enum": [
         "worktree"
-      ],
-      "type": "string"
-    },
-    "max_turns": {
-      "description": "Maximum number of agentic turns (API round-trips) before stopping. Used internally for warmup.",
-      "exclusiveMinimum": 0,
-      "maximum": 9007199254740991,
-      "type": "integer"
-    },
-    "model": {
-      "description": "Optional model to use for this agent. If not specified, inherits from parent. Prefer haiku for quick, straightforward tasks to minimize cost and latency.",
-      "enum": [
-        "sonnet",
-        "opus",
-        "haiku"
       ],
       "type": "string"
     },
@@ -1305,12 +1290,12 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
       "additionalProperties": {
         "additionalProperties": false,
         "properties": {
-          "markdown": {
-            "description": "The markdown preview content of the selected option, if the question used previews.",
-            "type": "string"
-          },
           "notes": {
             "description": "Free-text notes the user added to their selection.",
+            "type": "string"
+          },
+          "preview": {
+            "description": "The preview content of the selected option, if the question used previews.",
             "type": "string"
           }
         },
@@ -1370,8 +1355,8 @@ Plan mode note: In plan mode, use this tool to clarify requirements or choose be
                   "description": "The display text for this option that the user will see and select. Should be concise (1-5 words) and clearly describe the choice.",
                   "type": "string"
                 },
-                "markdown": {
-                  "description": "Optional preview content shown in a monospace box when this option is focused. Use for ASCII mockups, code snippets, or diagrams that help users visually compare options. Supports multi-line text with newlines.",
+                "preview": {
+                  "description": "Optional preview content rendered when this option is focused. Use for mockups, code snippets, or visual comparisons that help users compare options. See the tool description for the expected content format.",
                   "type": "string"
                 }
               },
