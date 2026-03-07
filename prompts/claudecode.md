@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.69.109; cc_entrypoint=sdk-cli; cch=ac891;
+x-anthropic-billing-header: cc_version=2.1.71.752; cc_entrypoint=sdk-cli; cch=7366a;
 ```
 
 
@@ -160,10 +160,10 @@ Available agent types and the tools they have access to:
 - Explore: Fast agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. "src/components/**/*.tsx"), search code for keywords (eg. "API endpoints"), or answer questions about the codebase (eg. "how do API endpoints work?"). When calling this agent, specify the desired thoroughness level: "quick" for basic searches, "medium" for moderate exploration, or "very thorough" for comprehensive analysis across multiple locations and naming conventions. (Tools: All tools except Agent, ExitPlanMode, Edit, Write, NotebookEdit)
 - Plan: Software architect agent for designing implementation plans. Use this when you need to plan the implementation strategy for a task. Returns step-by-step plans, identifies critical files, and considers architectural trade-offs. (Tools: All tools except Agent, ExitPlanMode, Edit, Write, NotebookEdit)
 
-When using the Agent tool, you must specify a subagent_type parameter to select which agent type to use.
+When using the Agent tool, specify a subagent_type parameter to select which agent type to use. If omitted, the general-purpose agent is used.
 
 When NOT to use the Agent tool:
-- If you want to read a specific file path, use the Read or Glob tool instead of the Agent tool, to find the match more quickly
+- If you want to read a specific file path, use the Read tool or the Glob tool instead of the Agent tool, to find the match more quickly
 - If you are searching for a specific class definition like "class Foo", use the Glob tool instead, to find the match more quickly
 - If you are searching for code within a specific file or set of 2-3 files, use the Read tool instead of the Agent tool, to find the match more quickly
 - Other tasks that are not related to the agent descriptions above
@@ -193,8 +193,6 @@ Example usage:
 
 <example>
 user: "Please write a function that checks if a number is prime"
-assistant: Sure let me write a function that checks if a number is prime
-assistant: First let me use the Write tool to write a function that checks if a number is prime
 assistant: I'm going to use the Write tool to write the following code:
 <code>
 function isPrime(n) {
@@ -208,7 +206,6 @@ function isPrime(n) {
 <commentary>
 Since a significant piece of code was written and the task was completed, now use the test-runner agent to run the tests
 </commentary>
-assistant: Now let me use the test-runner agent to run the tests
 assistant: Uses the Agent tool to launch the test-runner agent
 </example>
 
@@ -248,7 +245,7 @@ assistant: "I'm going to use the Agent tool to launch the greeting-responder age
       "type": "string"
     },
     "run_in_background": {
-      "description": "Set to true to run this agent in the background. The tool result will include an output_file path - use Read tool or Bash tail to check on output.",
+      "description": "Set to true to run this agent in the background. You will be notified when it completes.",
       "type": "boolean"
     },
     "subagent_type": {
@@ -258,8 +255,7 @@ assistant: "I'm going to use the Agent tool to launch the greeting-responder age
   },
   "required": [
     "description",
-    "prompt",
-    "subagent_type"
+    "prompt"
   ],
   "type": "object"
 }
@@ -876,7 +872,6 @@ Completely replaces the contents of a specific cell in a Jupyter notebook (.ipyn
 **Description:**
 
 ```
-IMPORTANT: WebFetch WILL FAIL for authenticated or private URLs. Before using this tool, check if the URL points to an authenticated service (e.g. Google Docs, Confluence, Jira, GitHub). If so, you MUST use ToolSearch first to find a specialized tool that provides authenticated access.
 
 - Fetches content from a specified URL and processes it using an AI model
 - Takes a URL and a prompt as input
