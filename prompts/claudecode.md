@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.73.939; cc_entrypoint=sdk-cli; cch=ba39e;
+x-anthropic-billing-header: cc_version=2.1.74.7f2; cc_entrypoint=sdk-cli; cch=67eae;
 ```
 
 
@@ -80,7 +80,7 @@ When you encounter an obstacle, do not use destructive actions as a shortcut to 
 
 # auto memory
 
-You have a persistent auto memory directory at `/root/.claude/projects/-app/memory/`. Its contents persist across conversations.
+You have a persistent auto memory directory at `/root/.claude/projects/-app/memory/`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence). Its contents persist across conversations.
 
 As you work, consult your memory files to build on previous experience.
 
