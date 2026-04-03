@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.90.232; cc_entrypoint=sdk-cli; cch=62597;
+x-anthropic-billing-header: cc_version=2.1.91.9f2; cc_entrypoint=sdk-cli; cch=1b197;
 ```
 
 
@@ -828,7 +828,7 @@ List all cron jobs scheduled via CronCreate in this session.
 Performs exact string replacements in files.
 
 Usage:
-- You must use your `Read` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file. 
+- You must use your `Read` tool at least once in the conversation before editing. This tool will error if you attempt an edit without reading the file.
 - When editing text from Read tool output, ensure you preserve the exact indentation (tabs/spaces) as it appears AFTER the line number prefix. The line number prefix format is: line number + tab. Everything after that is the actual file content to match. Never include any part of the line number prefix in the old_string or new_string.
 - ALWAYS prefer editing existing files in the codebase. NEVER write new files unless explicitly required.
 - Only use emojis if the user explicitly requests it. Avoid adding emojis to files unless asked.
