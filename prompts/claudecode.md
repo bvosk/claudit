@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.112.e61; cc_entrypoint=sdk-cli; cch=26225;
+x-anthropic-billing-header: cc_version=2.1.113.921; cc_entrypoint=sdk-cli; cch=773fe;
 ```
 
 
@@ -534,7 +534,7 @@ While the Bash tool can do similar things, it’s better to use the built-in too
 # Instructions
  - If your command will create new directories or files, first use this tool to run `ls` to verify the parent directory exists and is the correct location.
  - Always quote file paths that contain spaces with double quotes in your command (e.g., cd "path with spaces/file.txt")
- - Try to maintain your current working directory throughout the session by using absolute paths and avoiding usage of `cd`. You may use `cd` if the User explicitly requests it.
+ - Try to maintain your current working directory throughout the session by using absolute paths and avoiding usage of `cd`. You may use `cd` if the User explicitly requests it. In particular, never prepend `cd <current-directory>` to a `git` command — `git` already operates on the current working tree, and the compound triggers a permission prompt.
  - You may specify an optional timeout in milliseconds (up to 600000ms / 10 minutes). By default, your command will timeout after 120000ms (2 minutes).
  - You can use the `run_in_background` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes. You do not need to use '&' at the end of the command when using this parameter.
  - When issuing multiple commands:
