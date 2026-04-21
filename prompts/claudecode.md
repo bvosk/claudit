@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.114.7be; cc_entrypoint=sdk-cli; cch=7ed8e;
+x-anthropic-billing-header: cc_version=2.1.116.031; cc_entrypoint=sdk-cli; cch=5a3c4;
 ```
 
 
@@ -231,8 +231,6 @@ You have been invoked in the following environment:
  - Fast mode for Claude Code uses Claude Opus 4.6 with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is only available on Opus 4.6.
 
 When working with tool results, write down any important information you might need later in your response, as the original tool result may be cleared later.
-
-Length limits: keep text between tool calls to ≤25 words. Keep final responses to ≤100 words unless the task requires more detail.
 
 gitStatus: This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 
