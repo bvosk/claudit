@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.117.94c; cc_entrypoint=sdk-cli; cch=5aee2;
+x-anthropic-billing-header: cc_version=2.1.119.af2; cc_entrypoint=sdk-cli; cch=654c4;
 ```
 
 
@@ -1280,7 +1280,10 @@ A powerful search tool built on ripgrep
 ```
 Start a background monitor that streams events from a long-running script. Each stdout line is an event — you keep working and notifications arrive in the chat. Events arrive on their own schedule and are not replies from the user, even if one lands while you're waiting for the user to answer a question.
 
-Monitor is for the **streaming** case: "tell me every time X happens." For one-shot "wait until X is done," use Bash with run_in_background instead — you'll get a completion notification when it exits.
+Pick by how many notifications you need:
+- **One** ("tell me when the server is ready / the build finishes") → use **Bash with `run_in_background`** and a command that exits when the condition is true, e.g. `until grep -q "Ready in" dev.log; do sleep 0.5; done`. You get a single completion notification when it exits.
+- **One per occurrence, indefinitely** ("tell me every time an ERROR line appears") → Monitor with an unbounded command (`tail -f`, `inotifywait -m`, `while true`).
+- **One per occurrence, until a known end** ("emit each CI step result, stop when the run completes") → Monitor with a command that emits lines and then exits.
 
 Your script's stdout is the event stream. Each line becomes a notification. Exit ends the watch.
 
@@ -1300,6 +1303,19 @@ Your script's stdout is the event stream. Each line becomes a notification. Exit
 
   # Node script that emits events as they arrive (e.g. WebSocket listener)
   node watch-for-events.js
+
+  # Per-occurrence with a natural end: emit each CI check as it lands, exit when the run completes
+  prev=""
+  while true; do
+    s=$(gh pr checks 123 --json name,bucket)
+    cur=$(jq -r '.[] | select(.bucket!="pending") | "\(.name): \(.bucket)"' <<<"$s" | sort)
+    comm -13 <(echo "$prev") <(echo "$cur")
+    prev=$cur
+    jq -e 'all(.bucket!="pending")' <<<"$s" >/dev/null && break
+    sleep 30
+  done
+
+**Don't use an unbounded command for a single notification.** `tail -f`, `inotifywait -m`, and `while true` never exit on their own, so the monitor stays armed until timeout even after the event has fired. For "tell me when X is ready," use Bash `run_in_background` with an `until` loop instead (one notification, ends in seconds). Note that `tail -f log | grep -m 1 ...` does *not* fix this: if the log goes quiet after the match, `tail` never receives SIGPIPE and the pipeline hangs anyway.
 
 **Script quality:**
 - Always use `grep --line-buffered` in pipes — without it, pipe buffering delays events by minutes.
@@ -1470,7 +1486,7 @@ Usage:
 - This tool allows Claude Code to read images (eg PNG, JPG, etc). When reading an image file the contents are presented visually as Claude Code is a multimodal LLM.
 - This tool can read PDF files (.pdf). For large PDFs (more than 10 pages), you MUST provide the pages parameter to read specific page ranges (e.g., pages: "1-5"). Reading a large PDF without the pages parameter will fail. Maximum 20 pages per request.
 - This tool can read Jupyter notebooks (.ipynb files) and returns all cells with their outputs, combining code, text, and visualizations.
-- This tool can only read files, not directories. To read a directory, use an ls command via the Bash tool.
+- This tool can only read files, not directories. To list files in a directory, use the registered shell tool.
 - You will regularly be asked to read screenshots. If the user provides a path to a screenshot, ALWAYS use this tool to view the file at the path. This tool will work with all temporary file paths.
 - If you read a file that exists but has empty contents you will receive a system reminder warning in place of file contents.
 ```
