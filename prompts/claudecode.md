@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.126.f2b; cc_entrypoint=sdk-cli; cch=53256;
+x-anthropic-billing-header: cc_version=2.1.128.bd9; cc_entrypoint=sdk-cli; cch=0063c;
 ```
 
 
@@ -1489,6 +1489,7 @@ Usage:
 - This tool can only read files, not directories. To list files in a directory, use the registered shell tool.
 - You will regularly be asked to read screenshots. If the user provides a path to a screenshot, ALWAYS use this tool to view the file at the path. This tool will work with all temporary file paths.
 - If you read a file that exists but has empty contents you will receive a system reminder warning in place of file contents.
+- Do NOT re-read a file you just edited to verify — Edit/Write would have errored if the change failed, and the harness tracks file state for you.
 ```
 
 **Schema:**
@@ -1540,7 +1541,7 @@ Actions:
 - update: POST /v1/code/triggers/{trigger_id} (requires body, partial update)
 - run: POST /v1/code/triggers/{trigger_id}/run (optional body)
 
-The response is the raw JSON from the API.
+The response is the raw JSON from the API. For create/update, a summary line is appended with the server-parsed run time and the routine's claude.ai URL — relay both to the user so they can confirm the time is right and know where the result will appear.
 ```
 
 **Schema:**
