@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.128.bd9; cc_entrypoint=sdk-cli; cch=66e61;
+x-anthropic-billing-header: cc_version=2.1.132.c7b; cc_entrypoint=sdk-cli; cch=8d356;
 ```
 
 
@@ -660,7 +660,7 @@ Important:
       "type": "string"
     },
     "run_in_background": {
-      "description": "Set to true to run this command in the background. Use Read to read the output later.",
+      "description": "Set to true to run this command in the background.",
       "type": "boolean"
     },
     "timeout": {
@@ -897,7 +897,7 @@ Only skip EnterPlanMode for simple tasks:
 ## What Happens in Plan Mode
 
 In plan mode, you'll:
-1. Thoroughly explore the codebase using Glob, Grep, and Read tools
+1. Thoroughly explore the codebase using Glob, Grep, and Read
 2. Understand existing patterns and architecture
 3. Design an implementation approach
 4. Present your plan to the user for approval
