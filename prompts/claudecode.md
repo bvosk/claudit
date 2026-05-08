@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.132.c7b; cc_entrypoint=sdk-cli; cch=8d356;
+x-anthropic-billing-header: cc_version=2.1.133.4b3; cc_entrypoint=sdk-cli; cch=71334;
 ```
 
 
@@ -976,7 +976,7 @@ Use this tool ONLY when explicitly instructed to work in a worktree — either b
 
 ## Behavior
 
-- In a git repository: creates a new git worktree inside `.claude/worktrees/` with a new branch based on HEAD
+- In a git repository: creates a new git worktree inside `.claude/worktrees/` on a new branch. The base ref is governed by the `worktree.baseRef` setting: `fresh` (default) branches from origin/<default-branch>; `head` branches from your current local HEAD
 - Outside a git repository: delegates to WorktreeCreate/WorktreeRemove hooks for VCS-agnostic isolation
 - Switches the session's working directory to the new worktree
 - Use ExitWorktree to leave the worktree mid-session (keep or remove). On session exit, if still in the worktree, the user will be prompted to keep or remove it
