@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.143.dce; cc_entrypoint=sdk-cli; cch=13b66;
+x-anthropic-billing-header: cc_version=2.1.145.b21; cc_entrypoint=sdk-cli; cch=e1560;
 ```
 
 
@@ -713,6 +713,10 @@ Only use minute 0 or 30 when the user names that exact time and clearly means it
 ## Session-only
 
 Jobs live only in this Claude session — nothing is written to disk, and the job is gone when Claude exits.
+
+## Not for live watching
+
+CronCreate re-runs a prompt at fixed wall-clock intervals. To watch a log file, process, or command output and be notified the moment something changes, use the Monitor tool instead — Monitor streams events as they happen; cron polls on a schedule.
 
 ## Runtime behavior
 
