@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.169.f7b; cc_entrypoint=sdk-cli; cch=2cedc;
+x-anthropic-billing-header: cc_version=2.1.170.a00; cc_entrypoint=sdk-cli; cch=bf860;
 ```
 
 
@@ -226,10 +226,10 @@ You have been invoked in the following environment:
  - Is a git repository: true
  - Platform: linux
  - Shell: unknown
- - OS Version: Linux 6.17.0-1015-azure
+ - OS Version: Linux 6.17.0-1018-azure
  - You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
  - Assistant knowledge cutoff is February 2025.
- - The most recent Claude model family is Claude 4.X. Model IDs — Opus 4.8: 'claude-opus-4-8', Sonnet 4.6: 'claude-sonnet-4-6', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
+ - The most recent Claude models are Fable 5 and the Claude 4.X family. Model IDs — Fable 5: 'claude-fable-5', Opus 4.8: 'claude-opus-4-8', Sonnet 4.6: 'claude-sonnet-4-6', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
  - Claude Code is available as a CLI in the terminal, desktop app (Mac/Windows), web app (claude.ai/code), and IDE extensions (VS Code, JetBrains).
  - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 4.8/4.7/4.6.
 
@@ -353,7 +353,8 @@ The agent starts with no context from this conversation, so the prompt briefs it
       "enum": [
         "sonnet",
         "opus",
-        "haiku"
+        "haiku",
+        "fable"
       ],
       "type": "string"
     },
