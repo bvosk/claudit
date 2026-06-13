@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.173.a8a; cc_entrypoint=sdk-cli; cch=d9144;
+x-anthropic-billing-header: cc_version=2.1.176.4ca; cc_entrypoint=sdk-cli; cch=9b4d7;
 ```
 
 
@@ -284,7 +284,7 @@ If the target is already known, use the direct tool: Read for a known path, `gre
 - You can optionally run agents in the background using the run_in_background parameter. When an agent runs in the background, you will be automatically notified when it completes — do NOT sleep, poll, or proactively check on its progress. Continue with other work or respond to the user instead.
 - **Foreground vs background**: Use foreground (default) when you need the agent's results before you can proceed — e.g., research agents whose findings inform your next steps. Use background when you have genuinely independent work to do in parallel.
 - To continue a previously spawned agent, use SendMessage with the agent's ID or name as the `to` field — that resumes it with full context. A new Agent call starts a fresh agent with no memory of prior runs, so the prompt must be self-contained.
-- Clearly tell the agent whether you expect it to write code or just to do research (search, file reads, web fetches, etc.), since it is not aware of the user's intent
+- Clearly tell the agent whether you expect it to write code or just to do research (search, file reads, web fetches, etc.), since a fresh agent is not aware of the user's intent
 - If the agent description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first.
 - If the user specifies that they want you to run agents "in parallel", you MUST send a single message with multiple Agent tool use content blocks. For example, if you need to launch both a build-validator agent and a test-runner agent in parallel, send a single message with both tool calls.
 - With `isolation: "worktree"`, the worktree is automatically cleaned up if the agent makes no changes; otherwise the path and branch are returned in the result.
@@ -349,7 +349,7 @@ The agent starts with no context from this conversation, so the prompt briefs it
       "type": "string"
     },
     "model": {
-      "description": "Optional model override for this agent. Takes precedence over the agent definition\u0027s model frontmatter. If omitted, uses the agent definition\u0027s model, or inherits from the parent.",
+      "description": "Optional model override for this agent. Takes precedence over the agent definition\u0027s model frontmatter. If omitted, uses the agent definition\u0027s model, or inherits from the parent. Ignored for subagent_type: \"fork\" \u2014 forks always inherit the parent model.",
       "enum": [
         "sonnet",
         "opus",
