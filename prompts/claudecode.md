@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.185.1fc; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.186.1fe; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1715,6 +1715,56 @@ One short sentence on what you chose and why. Goes to telemetry and is shown bac
     "delaySeconds",
     "reason",
     "prompt"
+  ],
+  "type": "object"
+}
+```
+
+
+## SendMessage
+
+**Description:**
+
+```
+# SendMessage
+
+Send a message to another agent.
+
+```json
+{"to": "researcher", "summary": "assign task 1", "message": "start on task #1"}
+```
+
+| `to` | |
+|---|---|
+| `"researcher"` | Teammate by name |
+| `"main"` | The main conversation (background subagents only) |
+
+Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to active teammates by name; to resume a completed background agent, use the `agentId` (format `a...-...`) from its spawn result. When relaying, don't quote the original — it's already rendered to the user.
+```
+
+**Schema:**
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "message": {
+      "description": "Plain text message content",
+      "type": "string"
+    },
+    "summary": {
+      "description": "A 5-10 word summary shown as a preview in the UI (required when message is a string)",
+      "maxLength": 200,
+      "type": "string"
+    },
+    "to": {
+      "description": "Recipient: teammate name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "to",
+    "message"
   ],
   "type": "object"
 }
