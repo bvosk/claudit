@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.193.101; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.195.325; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1162,6 +1162,16 @@ For poll loops checking job state, emit on every terminal status (`succeeded|fai
 Stdout lines within 200ms are batched into a single notification, so multiline output from a single event groups naturally.
 
 The script runs in the same shell environment as Bash. Exit ends the watch (exit code is reported). Timeout → killed. Set `persistent: true` for session-length watches (PR monitoring, log tails) — the monitor runs until you call TaskStop or the session ends. Use TaskStop to cancel early.
+**ws source** — open a WebSocket and stream each incoming text frame as an event. No shell, no polling: the server pushes, you get notified.
+
+  Monitor({
+    ws: {url: 'wss://events.example.com/stream', protocols: ['v1']},
+    description: 'deploy events',
+  })
+
+Each text frame becomes one notification (multiline frames stay as one event). Binary frames are reported as `[binary frame, N bytes]` rather than passed through. Socket close ends the watch with the close code surfaced; errors are surfaced before close. Same rate limiting as bash — a firehose will be suppressed and eventually stopped, so subscribe to a filtered feed where one exists.
+
+Prefer this over `command: 'websocat wss://…'` — it avoids the extra process and line-buffering pitfalls. Use bash when you need to transform or filter frames with shell tools before they become events.
 ```
 
 **Schema:**
@@ -1188,13 +1198,32 @@ The script runs in the same shell environment as Bash. Exit ends the watch (exit
       "description": "Kill the monitor after this deadline. Default 300000ms, max 3600000ms. Ignored when persistent is true.",
       "minimum": 1000,
       "type": "number"
+    },
+    "ws": {
+      "additionalProperties": false,
+      "description": "WebSocket to open. Each text frame is an event; binary frames are reported as a placeholder line. Socket close ends the watch. Cannot be combined with command.",
+      "properties": {
+        "protocols": {
+          "items": {
+            "pattern": "^[!#$%\u0026\u0027*+.^_`|~0-9A-Za-z-]+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "type": "object"
     }
   },
   "required": [
     "description",
     "timeout_ms",
-    "persistent",
-    "command"
+    "persistent"
   ],
   "type": "object"
 }
