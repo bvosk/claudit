@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.195.325; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.196.68b; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -231,7 +231,7 @@ You have been invoked in the following environment:
  - Assistant knowledge cutoff is February 2025.
  - The most recent Claude models are Fable 5 and the Claude 4.X family. Model IDs — Fable 5: 'claude-fable-5', Opus 4.8: 'claude-opus-4-8', Sonnet 4.6: 'claude-sonnet-4-6', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
  - Claude Code is available as a CLI in the terminal, desktop app (Mac/Windows), web app (claude.ai/code), and IDE extensions (VS Code, JetBrains).
- - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 4.8/4.7/4.6.
+ - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 4.8/4.7.
 
 # Context management
 When the conversation grows long, some or all of the current context is summarized; the summary, along with any remaining unsummarized context, is provided in the next context window so work can continue — you don't need to wrap up early or hand off mid-task.
@@ -1379,6 +1379,91 @@ Usage:
   },
   "required": [
     "file_path"
+  ],
+  "type": "object"
+}
+```
+
+
+## ReportFindings
+
+**Description:**
+
+```
+Report code-review findings as a typed list so the host UI can render them. Use this only when the active code-review instructions tell you to report findings with this tool; otherwise follow whatever output format those instructions specify. When reporting a review's results, call it once with the verified findings ranked most-severe first (empty array if nothing survived verification) and do not also print the findings as text. When re-reporting after applying fixes (only if the apply instructions ask for it), set `outcome` on each finding to what actually happened.
+```
+
+**Schema:**
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "findings": {
+      "description": "Verified findings, most-severe first; empty if none survived",
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "failure_scenario": {
+            "description": "Concrete inputs/state \u2192 wrong output/crash",
+            "type": "string"
+          },
+          "file": {
+            "description": "Repo-relative path of the file the finding is in",
+            "type": "string"
+          },
+          "line": {
+            "description": "1-indexed line the finding anchors to",
+            "maximum": 9007199254740991,
+            "minimum": -9007199254740991,
+            "type": "integer"
+          },
+          "outcome": {
+            "description": "Set ONLY when re-reporting after applying fixes: what happened to this finding",
+            "enum": [
+              "fixed",
+              "skipped",
+              "no_change_needed"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "description": "One-sentence statement of the defect",
+            "type": "string"
+          },
+          "verdict": {
+            "description": "Set when a verify pass ran; absent on inline-only reviews",
+            "enum": [
+              "CONFIRMED",
+              "PLAUSIBLE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "summary",
+          "failure_scenario"
+        ],
+        "type": "object"
+      },
+      "maxItems": 32,
+      "type": "array"
+    },
+    "level": {
+      "description": "Effort level the review ran at",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "findings"
   ],
   "type": "object"
 }
