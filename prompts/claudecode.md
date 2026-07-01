@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.196.68b; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.197.fa0; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -229,7 +229,7 @@ You have been invoked in the following environment:
  - OS Version: Linux 6.17.0-1018-azure
  - You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
  - Assistant knowledge cutoff is February 2025.
- - The most recent Claude models are Fable 5 and the Claude 4.X family. Model IDs — Fable 5: 'claude-fable-5', Opus 4.8: 'claude-opus-4-8', Sonnet 4.6: 'claude-sonnet-4-6', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
+ - The most recent Claude models are the Claude 5 family, Opus 4.8, and Haiku 4.5. Model IDs — Fable 5: 'claude-fable-5', Opus 4.8: 'claude-opus-4-8', Sonnet 5: 'claude-sonnet-5', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
  - Claude Code is available as a CLI in the terminal, desktop app (Mac/Windows), web app (claude.ai/code), and IDE extensions (VS Code, JetBrains).
  - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 4.8/4.7.
 
@@ -2123,7 +2123,7 @@ Usage notes:
   - Web search is only available in the US
 
 IMPORTANT - Use the correct year in search queries:
-  - The current month is June 2026. You MUST use this year when searching for recent information, documentation, or current events.
+  - The current month is July 2026. You MUST use this year when searching for recent information, documentation, or current events.
   - Example: If the user asks for "latest React docs", search for "React documentation" with the current year, NOT last year
 
 ```
