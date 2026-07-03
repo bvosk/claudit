@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.198.6c0; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.199.8a0; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1296,7 +1296,7 @@ Because a notification they didn't need is annoying in a way that accumulates, e
 
 Keep the message under 200 characters, one line, no markdown. Lead with what they'd act on — "build failed: 2 auth tests" tells them more than "task done" and more than a status dump.
 
-If the result says the push wasn't sent, that's expected — no action needed.
+When the user is actively at the terminal, your output already reaches them — a notification on top of it would be a duplicate, so the tool skips it and says so. A "not sent" result is expected and only ever about this one notification: it was redundant, turned off, or had nowhere to go.
 ```
 
 **Schema:**
@@ -1400,6 +1400,11 @@ Report code-review findings as a typed list so the host UI can render them. Use 
       "items": {
         "additionalProperties": false,
         "properties": {
+          "category": {
+            "description": "Short kebab-case slug of the finding type, e.g. \"correctness\", \"simplification\", \"efficiency\", \"test-coverage\"",
+            "maxLength": 40,
+            "type": "string"
+          },
           "failure_scenario": {
             "description": "Concrete inputs/state \u2192 wrong output/crash",
             "type": "string"
@@ -1545,7 +1550,7 @@ Send a message to another agent.
 | `"researcher"` | Teammate by name |
 | `"main"` | The main conversation (background subagents only) |
 
-Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to active teammates by name; to resume a completed background agent, use the `agentId` (format `a...-...`) from its spawn result. When relaying, don't quote the original — it's already rendered to the user.
+Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to active teammates by name; to address a background agent that has no name (or whose name a teammate holds) — or to resume a completed one — use its `agentId` (format `a...-...`) from its spawn result. When relaying, don't quote the original — it's already rendered to the user.
 ```
 
 **Schema:**
