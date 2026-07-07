@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.201.4e1; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.202.4ac; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1480,7 +1480,7 @@ Schedule when to resume work in /loop dynamic mode — the user invoked /loop wi
 
 Do NOT schedule a short-interval wakeup to poll for background work you started — when harness-tracked work finishes, you are re-invoked automatically, so polling is wasted. Instead schedule a long fallback (1200s+) so the loop survives if the work hangs or never notifies. The exception is external work the harness cannot track (a CI run, a deploy, a remote queue) — there, pick a delay matched to how fast that state actually changes.
 
-Pass the same /loop prompt back via `prompt` each turn so the next firing repeats the task. For an autonomous /loop (no user prompt), pass the literal sentinel `<<autonomous-loop-dynamic>>` as `prompt` instead — the runtime resolves it back to the autonomous-loop instructions at fire time. (There is a similar `<<autonomous-loop>>` sentinel for CronCreate-based autonomous loops; do not confuse the two — ScheduleWakeup always uses the `-dynamic` variant.) Omit the call to end the loop.
+Pass the same /loop prompt back via `prompt` each turn so the next firing repeats the task. For an autonomous /loop (no user prompt), pass the literal sentinel `<<autonomous-loop-dynamic>>` as `prompt` instead — the runtime resolves it back to the autonomous-loop instructions at fire time. (There is a similar `<<autonomous-loop>>` sentinel for CronCreate-based autonomous loops; do not confuse the two — ScheduleWakeup always uses the `-dynamic` variant.) To end the loop, call this tool with `stop: true` (omit every other field) — the loop ends immediately and no further wakeups fire.
 
 ## Picking delaySeconds
 
@@ -1510,23 +1510,22 @@ One short sentence on what you chose and why. Goes to telemetry and is shown bac
   "additionalProperties": false,
   "properties": {
     "delaySeconds": {
-      "description": "Seconds from now to wake up. Clamped to [60, 3600] by the runtime.",
+      "description": "Seconds from now to wake up. Clamped to [60, 3600] by the runtime. Required unless `stop` is true.",
       "type": "number"
     },
     "prompt": {
-      "description": "The /loop input to fire on wake-up. Pass the same /loop input verbatim each turn so the next firing re-enters the skill and continues the loop. For autonomous /loop (no user prompt), pass the literal sentinel `\u003c\u003cautonomous-loop-dynamic\u003e\u003e` instead (the dynamic-pacing variant, not the CronCreate-mode `\u003c\u003cautonomous-loop\u003e\u003e`).",
+      "description": "The /loop input to fire on wake-up. Pass the same /loop input verbatim each turn so the next firing re-enters the skill and continues the loop. For autonomous /loop (no user prompt), pass the literal sentinel `\u003c\u003cautonomous-loop-dynamic\u003e\u003e` instead (the dynamic-pacing variant, not the CronCreate-mode `\u003c\u003cautonomous-loop\u003e\u003e`). Required unless `stop` is true.",
       "type": "string"
     },
     "reason": {
-      "description": "One short sentence explaining the chosen delay. Goes to telemetry and is shown to the user. Be specific.",
+      "description": "One short sentence explaining the chosen delay. Goes to telemetry and is shown to the user. Be specific. Required unless `stop` is true.",
       "type": "string"
+    },
+    "stop": {
+      "description": "Set to true to end the dynamic loop immediately instead of scheduling another wakeup. When true, all other fields are ignored and no further wakeups fire.",
+      "type": "boolean"
     }
   },
-  "required": [
-    "delaySeconds",
-    "reason",
-    "prompt"
-  ],
   "type": "object"
 }
 ```
