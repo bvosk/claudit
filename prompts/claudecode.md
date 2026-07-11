@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.206.1e4; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.207.9bb; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1484,7 +1484,7 @@ Pass the same /loop prompt back via `prompt` each turn so the next firing repeat
 
 ## Picking delaySeconds
 
-The Anthropic prompt cache has a 5-minute TTL. Sleeping past 300 seconds means the next wake-up reads your full conversation context uncached — slower and more expensive. So the natural breakpoints:
+This session's requests use the default 5-minute Anthropic prompt-cache TTL. Sleeping past 300 seconds means the next wake-up reads your full conversation context uncached — slower and more expensive. So the natural breakpoints:
 
 - **Under 5 minutes (60s–270s)**: cache stays warm. Right for actively polling external state the harness can't notify you about — a CI run, a deploy, a remote queue.
 - **5 minutes to 1 hour (300s–3600s)**: pay the cache miss. Right when there's no point checking sooner — waiting on something that takes minutes to change, genuinely idle, or as the long fallback heartbeat when something else is the primary wake signal.
