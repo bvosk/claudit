@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.211.db8; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.212.0e4; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -228,7 +228,7 @@ You have been invoked in the following environment:
  - Is a git repository: true
  - Platform: linux
  - Shell: unknown
- - OS Version: Linux 6.17.0-1018-azure
+ - OS Version: Linux 6.17.0-1020-azure
  - You are powered by the model named Haiku 4.5. The exact model ID is claude-haiku-4-5-20251001.
  - Assistant knowledge cutoff is February 2025.
  - The most recent Claude models are the Claude 5 family, Opus 4.8, and Haiku 4.5. Model IDs — Fable 5: 'claude-fable-5', Opus 4.8: 'claude-opus-4-8', Sonnet 5: 'claude-sonnet-5', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
@@ -1440,6 +1440,11 @@ Report code-review findings as a typed list so the host UI can render them. Use 
               "skipped",
               "no_change_needed"
             ],
+            "type": "string"
+          },
+          "short_summary": {
+            "description": "Compressed label for compact UI (\u226460 chars): the claim alone, no rationale or consequence clause",
+            "maxLength": 60,
             "type": "string"
           },
           "summary": {
