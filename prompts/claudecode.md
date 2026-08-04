@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.220.5bd; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.221.8fd; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -233,7 +233,7 @@ You have been invoked in the following environment:
  - Assistant knowledge cutoff is February 2025.
  - The most recent Claude models are the Claude 5 family and Haiku 4.5. Model IDs — Fable 5: 'claude-fable-5', Opus 5: 'claude-opus-5', Sonnet 5: 'claude-sonnet-5', Haiku 4.5: 'claude-haiku-4-5-20251001'. When building AI applications, default to the latest and most capable Claude models.
  - Claude Code is available as a CLI in the terminal, desktop app (Mac/Windows), web app (claude.ai/code), and IDE extensions (VS Code, JetBrains).
- - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 5/4.8/4.7.
+ - Fast mode for Claude Code uses Claude Opus with faster output (it does not downgrade to a smaller model). It can be toggled with /fast and is available on Opus 5/4.8.
 
 # Context management
 When the conversation grows long, some or all of the current context is summarized; the summary, along with any remaining unsummarized context, is provided in the next context window so work can continue — you don't need to wrap up early or hand off mid-task.
