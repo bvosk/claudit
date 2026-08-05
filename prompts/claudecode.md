@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.221.8fd; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.222.209; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1582,12 +1582,13 @@ Your plain text output is NOT visible to other agents — to communicate, you MU
       "type": "string"
     },
     "summary": {
-      "description": "A 5-10 word summary shown as a preview in the UI (required when message is a string)",
+      "description": "A 5-10 word summary shown as a one-line preview in the UI (required when message is a string). Longer summaries are truncated to 200 characters rather than rejected, and only the first line is shown.",
       "maxLength": 200,
       "type": "string"
     },
     "to": {
       "description": "Recipient: teammate name",
+      "pattern": "^[^\\n\\r]{0,200}$",
       "type": "string"
     }
   },
