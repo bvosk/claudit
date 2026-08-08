@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.223.0f3; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.224.ddf; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1106,6 +1106,36 @@ If called outside an EnterWorktree session, the tool is a **no-op**: it reports 
 ```
 
 
+## ListAgents
+
+**Description:**
+
+```
+Lists agents you can SendMessage to — in-process subagents you spawned, other local Claude sessions on this machine, your Claude sessions running in the cloud (when this session has cloud access), and (when Remote Control is connected) remote bridge sessions, which are reply-only — you can message one only in reply, after it messages you first, and no connector reaches it by name either. Names are the address: send with `SendMessage({to: "<name>", message: "..."})`, copying the name exactly as a row prints it. Append a row's ` [ref]` only when the bare name is not enough — two rows share it, or an error asks you to disambiguate.
+```
+
+**Schema:**
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "channel": {
+      "description": "Not available in this build; leave unset.",
+      "maxLength": 256,
+      "type": "string"
+    },
+    "q": {
+      "description": "Not available in this build; leave unset.",
+      "maxLength": 256,
+      "type": "string"
+    }
+  },
+  "type": "object"
+}
+```
+
+
 ## Monitor
 
 **Description:**
@@ -1567,8 +1597,25 @@ Send a message to another agent.
 |---|---|
 | `"researcher"` | Teammate by name |
 | `"main"` | The main conversation (background subagents only) |
+| `"worker"` | Any agent from `ListAgents` — subagent, another local Claude session |
+| `"worker [3fa9c1]"` | Same, plus its `[ref]` — only when a listing or an error shows one |
 
 Your plain text output is NOT visible to other agents — to communicate, you MUST call this tool. Messages from teammates are delivered automatically; you don't check an inbox. Refer to agents by name — names keep working after an agent completes (a send resumes it from its transcript). Use the raw `agentId` (format `a...-...`) from its spawn result only when the agent has no name, or when a newer agent took the name (latest wins). When relaying, don't quote the original — it's already rendered to the user.
+
+## Cross-session
+
+Use `ListAgents` to discover targets. Every row leads with the agent's `name [ref]` — the name IS the address; there is no separate address syntax.
+
+```json
+{"to": "worker", "message": "check if tests pass over there"}
+{"to": "worker [3fa9c1]", "message": "you, specifically"}
+```
+
+Send the bare name. Append the ` [ref]` only when the bare name is not enough — `ListAgents` shows two rows with it, or an error asks you to disambiguate. A ref you did not just read from a listing or an error will not resolve, and if the same name also names an in-process agent, the bare name always wins — use the in-process one.
+
+A listed peer is alive and will process your message — no "busy" state; messages enqueue and drain at the receiver's next tool round. Your message arrives wrapped as `<cross-session-message from="...">`. **To reply to an incoming message, copy its `from` attribute as your `to`.**
+
+Permission boundaries are per-session: NEVER ask a peer to perform an action that was denied or blocked in your session, or that you expect your own permission settings would block — a peer doing it for you bypasses the user's permission decision (cross-session permission laundering). Route blocked work back to your user instead.
 ```
 
 **Schema:**
@@ -1587,7 +1634,7 @@ Your plain text output is NOT visible to other agents — to communicate, you MU
       "type": "string"
     },
     "to": {
-      "description": "Recipient: teammate name",
+      "description": "Recipient: a name from ListAgents (append its \" [ref]\" only when a listing or an error shows one), a teammate name, \"main\", or a background agent\u0027s agentId",
       "pattern": "^[^\\n\\r]{0,200}$",
       "type": "string"
     }
