@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.227.f30; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.228.d3e; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1111,7 +1111,7 @@ If called outside an EnterWorktree session, the tool is a **no-op**: it reports 
 **Description:**
 
 ```
-Lists agents you can SendMessage to — in-process subagents you spawned, other local Claude sessions on this machine, your Claude sessions running in the cloud (when this session has cloud access), and (when Remote Control is connected here) your Remote Control sessions on other machines. Names are the address: send with `SendMessage({to: "<name>", message: "..."})`, copying the name exactly as a row prints it. Append a row's ` [ref]` only when the bare name is not enough — two rows share it, or an error asks you to disambiguate.
+Lists agents you can SendMessage to — in-process subagents you spawned, other local Claude sessions on this machine, your Claude sessions running in the cloud (when this session has cloud access), and (when Remote Control is connected here) your account's other sessions — Remote Control sessions on other machines and cloud sessions, each row labeled by kind. Names are the address: send with `SendMessage({to: "<name>", message: "..."})`, copying the name exactly as a row prints it. Append a row's ` [ref]` only when the bare name is not enough — two rows share it, or an error asks you to disambiguate.
 ```
 
 **Schema:**
