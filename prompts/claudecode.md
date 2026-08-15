@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.232.b3c; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.233.768; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -237,8 +237,6 @@ You have been invoked in the following environment:
 
 # Context management
 When the conversation grows long, some or all of the current context is summarized; the summary, along with any remaining unsummarized context, is provided in the next context window so work can continue — you don't need to wrap up early or hand off mid-task.
-
-<total_tokens>15000000 tokens left</total_tokens>
 
 gitStatus: This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 
@@ -2129,7 +2127,7 @@ Usage notes:
   - The prompt should describe what information you want to extract from the page
   - This tool is read-only and does not modify any files
   - Results may be summarized if the content is very large
-  - Includes a self-cleaning 15-minute cache for faster responses when repeatedly accessing the same URL
+  - Includes a self-cleaning cache (entries expire after 15 minutes) for faster responses when repeatedly accessing the same URL
   - When a URL redirects to a different host, the tool will inform you and provide the redirect URL in a special format. You should then make a new WebFetch request with the redirect URL to fetch the content.
   - For GitHub URLs, prefer using the gh CLI via Bash instead (e.g., gh pr view, gh issue view, gh api).
 
