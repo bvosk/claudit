@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.233.768; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.234.fe6; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -237,6 +237,8 @@ You have been invoked in the following environment:
 
 # Context management
 When the conversation grows long, some or all of the current context is summarized; the summary, along with any remaining unsummarized context, is provided in the next context window so work can continue — you don't need to wrap up early or hand off mid-task.
+
+<total_tokens>15000000 tokens left</total_tokens>
 
 gitStatus: This is the git status at the start of the conversation. Note that this status is a snapshot in time, and will not update during the conversation.
 
@@ -1640,8 +1642,15 @@ Permission boundaries are per-session: NEVER ask a peer to perform an action tha
       "type": "string"
     },
     "to": {
+      "allOf": [
+        {
+          "pattern": "^[^\\n\\r]*$"
+        },
+        {
+          "pattern": "^[\\s\\S]{0,300}$"
+        }
+      ],
       "description": "Recipient: a name from ListAgents (append its \" [ref]\" only when a listing or an error shows one), a teammate name, \"main\", or a background agent\u0027s agentId",
-      "pattern": "^[^\\n\\r]{0,200}$",
       "type": "string"
     }
   },
