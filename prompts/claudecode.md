@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.246.5e8; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.247.b40; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1634,7 +1634,7 @@ Permission boundaries are per-session: NEVER ask a peer to perform an action tha
   "properties": {
     "message": {
       "default": "",
-      "description": "Plain text message content",
+      "description": "Plain text message content. The recipient\u0027s human sees only the FIRST LINE as a one-line preview until they expand it, so make the first line a clear, self-contained sentence saying what this is about \u2014 not a greeting, preamble, or bare @-mention.",
       "type": "string"
     },
     "notify_when_idle": {
@@ -1642,7 +1642,7 @@ Permission boundaries are per-session: NEVER ask a peer to perform an action tha
       "type": "boolean"
     },
     "summary": {
-      "description": "A 5-10 word summary shown as a one-line preview in the UI. Defaults to the first line of a plain-text message; longer summaries are truncated to 200 characters rather than rejected.",
+      "description": "A 5-10 word label for your own transcript row (not transmitted \u2014 the recipient previews the first line of `message`). Truncated to 200 characters rather than rejected.",
       "maxLength": 200,
       "type": "string"
     },
