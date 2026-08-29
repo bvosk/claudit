@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.250.42a; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.251.420; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -359,7 +359,7 @@ The agent starts with no context from this conversation, so the prompt briefs it
       "type": "string"
     },
     "model": {
-      "description": "Optional model override for this agent. Takes precedence over the agent definition\u0027s model frontmatter. If omitted, uses the agent definition\u0027s model, or inherits from the parent. Ignored for subagent_type: \"fork\" \u2014 forks always inherit the parent model.",
+      "description": "Optional model override for this agent. Takes precedence over the agent definition\u0027s model frontmatter and the configured default subagent model. If omitted, uses the agent definition\u0027s model, else the default (inherits from the parent unless a default subagent model is configured). Ignored for subagent_type: \"fork\" \u2014 forks always inherit the parent model.",
       "enum": [
         "sonnet",
         "opus",
