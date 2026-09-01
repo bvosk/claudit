@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.251.420; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.252.a82; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -2201,7 +2201,7 @@ Usage notes:
   - Web search is only available in the US
 
 IMPORTANT - Use the correct year in search queries:
-  - The current month is August 2026. You MUST use this year when searching for recent information, documentation, or current events.
+  - The current month is September 2026. You MUST use this year when searching for recent information, documentation, or current events.
   - Example: If the user asks for "latest React docs", search for "React documentation" with the current year, NOT last year
 
 ```
