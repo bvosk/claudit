@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.267.0a3; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.268.3e5; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -2113,6 +2113,7 @@ Usage notes:
   - IMPORTANT: If an MCP-provided web fetch tool is available, prefer using that tool instead of this one, as it may have fewer restrictions.
   - The URL must be a fully-formed valid URL
   - HTTP URLs will be automatically upgraded to HTTPS
+  - localhost and other hostnames without a dot are not supported; for a local server, use curl via Bash
   - The prompt should describe what information you want to extract from the page
   - This tool is read-only and does not modify any files
   - Results may be summarized if the content is very large
