@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.289.7e2; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.291.ca4; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -1856,7 +1856,7 @@ Use TaskGet with a specific task ID to view full details including description a
 
 - Stops a running background task by its ID
 - Takes a task_id parameter identifying the task to stop
-- To stop an agent-team teammate, pass its agent ID ("name@team") or bare teammate name as task_id
+- To stop an agent-team teammate, pass its agent ID or bare teammate name as task_id
 - To stop a background agent spawned with a name, pass that name as task_id
 - Returns a success or failure status
 - Use this tool when you need to terminate a long-running task
@@ -2073,6 +2073,12 @@ Usage notes:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "offset": {
+      "description": "Character position in the page text to start reading from. Use it to read on through a page too long for one call, with the value the previous result gave.",
+      "maximum": 9007199254740991,
+      "minimum": 0,
+      "type": "integer"
+    },
     "prompt": {
       "description": "The prompt to run on the fetched content",
       "type": "string"
