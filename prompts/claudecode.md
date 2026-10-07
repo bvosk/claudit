@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.291.ca4; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.292.c59; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -331,6 +331,17 @@ The agent starts with no context from this conversation, so the prompt briefs it
       "description": "A short (3-5 word) description of the task",
       "type": "string"
     },
+    "effort": {
+      "description": "Reasoning effort for this agent. Set this ONLY when the user, or instructions such as CLAUDE.md or a skill, explicitly ask that this agent or delegated work run at a specific effort level, never on your own judgment; otherwise omit it and the agent runs at its usual effort.",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "type": "string"
+    },
     "isolation": {
       "description": "Isolation mode. \"worktree\" creates a temporary git worktree so the agent works on an isolated copy of the repo. \"remote\" launches the agent in a remote cloud environment (always runs in background; availability is gated).",
       "enum": [
@@ -393,7 +404,7 @@ While the Bash tool can do similar things, it’s better to use the built-in too
  - Always quote file paths that contain spaces with double quotes in your command (e.g., cd "path with spaces/file.txt")
  - Try to maintain your current working directory throughout the session by using absolute paths and avoiding usage of `cd`. You may use `cd` if the User explicitly requests it. In particular, never prepend `cd <current-directory>` to a `git` command — `git` already operates on the current working tree, and the compound triggers a permission prompt.
  - You may specify an optional timeout in milliseconds (up to 600000ms / 10 minutes for a foreground command). By default, your command will timeout after 120000ms (2 minutes).
- - You can use the `run_in_background` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes. You do not need to use '&' at the end of the command when using this parameter. With `run_in_background` the timeout is instead how long the command may run in the background (default 1800000ms / 30 minutes, max 7200000ms / 2 hours); at that limit it is stopped and you are notified.
+ - You can use the `run_in_background` parameter to run the command in the background. Only use this if you don't need the result immediately and are OK being notified when the command completes later. You do not need to check the output right away - you'll be notified when it finishes. You do not need to use '&' at the end of the command when using this parameter. With `run_in_background` the timeout is instead how long the command may run in the background (default 600000ms / 10 minutes, max 7200000ms / 2 hours); at that limit it is stopped and you are notified.
  - For git commands:
   - Prefer to create a new commit rather than amending an existing commit.
   - Before running destructive operations (e.g., git reset --hard, git push --force, git checkout --), consider whether there is a safer alternative that achieves the same goal. Only use destructive operations when they are truly the best approach.
@@ -510,7 +521,7 @@ Important:
       "type": "string"
     },
     "run_in_background": {
-      "description": "Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 1800000 ms, max 7200000 ms).",
+      "description": "Set to true to run this command in the background. With it, `timeout` limits how long the command may run in the background before it is stopped (default 600000 ms, max 7200000 ms).",
       "type": "boolean"
     },
     "timeout": {
