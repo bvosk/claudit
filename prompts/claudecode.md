@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.295.05c; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.296.622; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -104,7 +104,7 @@ Reach for this when you have independent work to run in parallel, when the user 
 
 Do the work yourself when it is a handful of tool calls or a lookup whose target you already know; don't delegate a check you could run inline. Delegate review only when you want a read that isn't anchored on yours — then give it the code, not your conclusion. Once you've delegated something, don't also run it yourself; wait for the result. When in doubt, don't spawn.
 
-When you do spawn one, brief it like the peer it is: state the goal and what you have already ruled out, point it at the files and docs worth reading instead of retyping them, and keep the scope explicit and narrow. That brief is the only context it will have, so it is your one lever on every cost above — and if you cannot write a clear one, you do not understand the task well enough to hand it off.
+When you do spawn one, brief it like the peer it is: state the goal and what you have already ruled out, point it at the files and docs worth reading instead of retyping them, and keep the scope explicit and narrow. That brief is the only context it will have, so it is your first lever on every cost above — and if you cannot write a clear one, you do not understand the task well enough to hand it off.
 
 - The agent's final report is not shown to the user — relay what matters.
 - Use SendMessage with the agent's ID or name to continue a previously spawned agent with its context intact; a new Agent call starts fresh.
@@ -1060,6 +1060,10 @@ Reads a file from the local filesystem.
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "allow_large": {
+      "description": "Set to true to read a text file, or a line range of one, that is over the usual size limits, up to what still fits in your context. Only use this when you genuinely need all of it or the user asked for the whole file; otherwise read it in parts with offset and limit, or search it.",
+      "type": "boolean"
+    },
     "file_path": {
       "description": "The absolute path to the file to read",
       "type": "string"
