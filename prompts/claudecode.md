@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.301.b14; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.302.804; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -94,7 +94,7 @@ Launch a new agent to handle complex, multi-step tasks. Each agent type has spec
 
 Available agent types are listed in <system-reminder> messages in the conversation.
 
-When using the Agent tool, specify a subagent_type parameter to select which agent type to use. If omitted, the general-purpose agent is used.
+When using the Agent tool, specify a subagent_type to select an agent: `"fork"` forks yourself (the fork inherits your full conversation context and always runs on your model — a `model` override is ignored); any other type — or omitting it — starts a fresh agent (general-purpose by default).
 
 ## When to use
 
@@ -106,8 +106,10 @@ Do the work yourself when it is a handful of tool calls or a lookup whose target
 
 When you do spawn one, brief it like the peer it is: state the goal and what you have already ruled out, point it at the files and docs worth reading instead of retyping them, and keep the scope explicit and narrow. That brief is the only context it will have, so it is your first lever on every cost above — and if you cannot write a clear one, you do not understand the task well enough to hand it off.
 
+A fork keeps its tool output out of your context. If you are the fork, execute directly — don't re-delegate.
+
 - The agent's final report is not shown to the user — relay what matters.
-- Use SendMessage with the agent's ID or name to continue a previously spawned agent with its context intact; a new Agent call starts fresh.
+- Use SendMessage with the agent's ID or name to continue a previously spawned agent with its context intact; a new Agent call starts fresh (except subagent_type: "fork", which inherits your context).
 - Each agent type's model, reasoning effort, and tools come from its definition (`.claude/agents/*.md` frontmatter or SDK `agents`).
 - `isolation: "worktree"` gives the agent its own git worktree (auto-cleaned if unchanged).
 - Subagents run in the background by default; you'll be notified when one completes. Pass `run_in_background: false` only when your very next action depends on the result and nothing else could usefully happen while it runs — otherwise background it so the user can interject. Never fabricate or predict a pending agent's results — the notification is never something you write yourself; if the user asks before it arrives, say it's still running.
@@ -124,7 +126,7 @@ When you do spawn one, brief it like the peer it is: state the goal and what you
       "type": "string"
     },
     "effort": {
-      "description": "Reasoning effort for this agent. Set this ONLY when the user, or instructions such as CLAUDE.md or a skill, explicitly ask that this agent or delegated work run at a specific effort level, never on your own judgment; otherwise omit it and the agent runs at its usual effort.",
+      "description": "Reasoning effort for this agent. Set this ONLY when the user, or instructions such as CLAUDE.md or a skill, explicitly ask that this agent or delegated work run at a specific effort level, never on your own judgment; otherwise omit it and the agent runs at its usual effort. Ignored for subagent_type: \"fork\": a fork runs at your own effort.",
       "enum": [
         "low",
         "medium",
@@ -360,6 +362,8 @@ List all cron jobs scheduled via CronCreate in this session.
 
 ```
 Read and update the user's claude.ai/design design-system projects through their claude.ai login (or, for sessions without one, a dedicated design authorization from /design-login). Use this only with the /design-sync skill, which the user starts, to keep a local component library in sync with one of those projects — incrementally, one component at a time, never as a wholesale replace.
+
+Standalone Claude Design (claude.ai/design) closes by December 14, 2026. Claude Design now lives in Claude. If the server refuses a call because standalone Claude Design or the project has closed or moved, give the user the server's message as written and stop.
 
 The tool dispatches on `method`:
 
