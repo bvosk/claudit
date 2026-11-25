@@ -3,7 +3,7 @@
 
 
 ```
-x-anthropic-billing-header: cc_version=2.1.331.417; cc_entrypoint=sdk-cli;
+x-anthropic-billing-header: cc_version=2.1.332.9a2; cc_entrypoint=sdk-cli;
 ```
 
 
@@ -612,8 +612,7 @@ Query forms:
     }
   },
   "required": [
-    "query",
-    "max_results"
+    "query"
   ],
   "type": "object"
 }
